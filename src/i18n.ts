@@ -5,7 +5,7 @@ import type { Language, StringKey } from './types';
 type Strings = Record<StringKey, string>;
 type AllStrings = Record<Language, Strings>;
 
-const STRINGS: AllStrings = {
+export const STRINGS: AllStrings = {
   en: {
     app_name: 'VEIL',
     start_session: 'Start Secure Session',
@@ -171,6 +171,7 @@ const STRINGS: AllStrings = {
     decrypt_incoming: '\u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC',
   },
 };
+
 
 let _veilLang: Language = 'en';
 

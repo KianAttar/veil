@@ -11,7 +11,7 @@ unit tests for it before moving to the next layer.
 src/types.ts        ← pure type definitions, no logic
 src/crypto.ts       ← no Veil dependencies, just WebCrypto        ✅ DONE
 src/disguise.ts     ← imports types.ts                              ✅ DONE
-src/i18n.ts         ← imports types.ts
+src/i18n.ts         ← imports types.ts                              ✅ DONE
 src/background.ts   ← no Veil dependencies, just Chrome APIs
 src/content.ts      ← imports crypto + disguise
 src/sidebar.ts      ← imports crypto + disguise + i18n             (top)
@@ -39,14 +39,12 @@ src/sidebar.ts      ← imports crypto + disguise + i18n             (top)
 - Topics covered: constants, isAnyVeil, wrap/unwrap round-trips, type
   discrimination, edge cases, integration with VeilCrypto
 
-### ⬜ src/i18n.ts — NEXT
-- STRINGS object structure (en + fa)
-- `t(key)` lookup with fallback chain
-- `setLang` / `getLang` module state
-- Tests: key lookup, missing key fallback, language switching, all keys
-  present in both languages
+### ✅ src/i18n.ts — DONE
+- Simple lookup table — no logic warranting deep testing
+- Exported STRINGS to allow direct key comparison in tests
+- Tests: `test/i18n.test.ts` — 1 test: every English key is present in Persian
 
-### ⬜ src/background.ts
+### ⬜ src/background.ts — NEXT
 - Chrome action click → TOGGLE_SIDEBAR message routing
 - Message forwarding: sidebar → content script (target: 'content')
 - GET_TAB_HOSTNAME handler
