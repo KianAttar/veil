@@ -6,7 +6,10 @@
   "scripts": {
     "build": "node node_modules/esbuild/bin/esbuild src/background.ts src/content.ts src/sidebar.ts --bundle --platform=browser --target=chrome120 --outdir=.",
     "typecheck": "tsc --noEmit",
-    "test": "pnpm run build && playwright test"
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "pnpm run build && playwright test",
+    "test": "pnpm run test:unit && pnpm run test:e2e"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +20,7 @@
     "@types/chrome": "^0.1.37",
     "@types/node": "^25.4.0",
     "esbuild": "^0.27.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
