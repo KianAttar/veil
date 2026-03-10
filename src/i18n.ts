@@ -1,0 +1,187 @@
+// Veil — Internationalization (English + Persian)
+
+import type { Language, StringKey } from './types';
+
+type Strings = Record<StringKey, string>;
+type AllStrings = Record<Language, Strings>;
+
+const STRINGS: AllStrings = {
+  en: {
+    app_name: 'VEIL',
+    start_session: 'Start Secure Session',
+    complete_handshake: 'Complete Handshake',
+    waiting: 'Waiting for reply...',
+    verified: 'Session Verified',
+    no_session: 'No active secure session.',
+    send_encrypted: 'Send Encrypted',
+    end_session: 'End Session',
+    settings: 'Settings',
+    copy: 'Copy',
+    copied: 'Copied!',
+    cancel: 'Cancel',
+    type_message: 'Type your message...',
+    send_invite: 'Send this to your contact:',
+    copy_invite: 'Copy Invite Code',
+    waiting_reply: 'Waiting for their reply...',
+    manual_tools: 'Manual Tools',
+    paste_decrypt: 'Paste ciphertext to decrypt',
+    decrypt: 'Decrypt',
+    onboarding_input: 'To auto-send encrypted messages, click your chat input box now.',
+    onboarding_send: 'Now click the Send button.',
+    onboarding_done: 'Setup complete! Auto-send is configured for this site.',
+    onboarding_reset: 'Re-configure input detection',
+    language: 'Language',
+    secure: 'Secure',
+    fingerprint: 'Fingerprint',
+    fingerprint_match: 'Fingerprint verified - session is secure.',
+    fingerprint_mismatch: 'WARNING: Fingerprint mismatch! Possible MITM attack. Do NOT proceed.',
+    compare_fingerprint: 'Compare this fingerprint with your contact via a separate channel:',
+    you: 'You',
+    them: 'Them',
+    session_ended: 'Session ended. Keys wiped.',
+    copy_fallback: 'Could not auto-send. Copy and paste manually:',
+    what_veil_does:
+      'Veil encrypts your messages before they leave your browser. The messenger platform only sees encrypted text.',
+    what_veil_cannot:
+      'Veil cannot protect against device-level compromise (malware, spyware, keyloggers), physical access to an unlocked device, or metadata (who you talk to, when, how often).',
+    hygiene_note:
+      'Close your browser when you are not actively chatting. While the browser is open, session keys exist in RAM.',
+    first_launch_welcome: 'Welcome to Veil',
+    choose_language: 'Choose your language',
+    handshake_received: 'Handshake invite detected. Complete the handshake?',
+    accept_handshake: 'Accept & Connect',
+    step1_title: 'Step 1: Create invite',
+    step1_desc:
+      'Click below to generate a secure invite code. Send this code to your contact through the chat.',
+    step2_title: 'Step 2: Wait for response',
+    step2_desc:
+      'Your contact must open Veil, click "I Received an Invite", and paste your code. They will send back their own code.',
+    step3_title: 'Step 3: Connected!',
+    step3_desc: 'Both sides verified. You can now send encrypted messages.',
+    create_invite: 'Create Invite',
+    i_received_invite: 'I Received an Invite',
+    paste_invite_prompt: 'Paste the invite code you received from your contact:',
+    paste_here: 'Paste invite code here...',
+    connect: 'Connect',
+    status_generating: 'Generating secure keys...',
+    status_connected: 'Connected & Verified',
+    status_waiting: 'Waiting for contact\'s response...',
+    how_it_works: 'How it works',
+    how_it_works_desc:
+      '1. One person creates an invite and sends the code\n2. The other person pastes the code and connects\n3. Both sides are now encrypted end-to-end',
+    or_paste_reply: 'Or paste the reply code manually:',
+    paste_reply_here: 'Paste reply code here...',
+    submit_reply: 'Submit Reply',
+    paste_incoming: 'Paste incoming message to decrypt:',
+    paste_incoming_here: 'Paste encrypted message here...',
+    decrypt_incoming: 'Decrypt',
+  },
+  fa: {
+    app_name: 'VEIL',
+    start_session: '\u0634\u0631\u0648\u0639 \u06AF\u0641\u062A\u06AF\u0648\u06CC \u0627\u0645\u0646',
+    complete_handshake: '\u062A\u06A9\u0645\u06CC\u0644 \u062F\u0633\u062A\u200C\u062F\u0627\u062F',
+    waiting: '\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u067E\u0627\u0633\u062E...',
+    verified: '\u062C\u0644\u0633\u0647 \u062A\u0623\u06CC\u06CC\u062F \u0634\u062F',
+    no_session:
+      '\u0647\u06CC\u0686 \u062C\u0644\u0633\u0647 \u0627\u0645\u0646\u06CC \u0641\u0639\u0627\u0644 \u0646\u06CC\u0633\u062A.',
+    send_encrypted:
+      '\u0627\u0631\u0633\u0627\u0644 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647',
+    end_session: '\u067E\u0627\u06CC\u0627\u0646 \u062C\u0644\u0633\u0647',
+    settings: '\u062A\u0646\u0638\u06CC\u0645\u0627\u062A',
+    copy: '\u06A9\u067E\u06CC',
+    copied: '\u06A9\u067E\u06CC \u0634\u062F!',
+    cancel: '\u0644\u063A\u0648',
+    type_message: '\u067E\u06CC\u0627\u0645 \u062E\u0648\u062F \u0631\u0627 \u0628\u0646\u0648\u06CC\u0633\u06CC\u062F...',
+    send_invite:
+      '\u0627\u06CC\u0646 \u0631\u0627 \u0628\u0631\u0627\u06CC \u0645\u062E\u0627\u0637\u0628 \u062E\u0648\u062F \u0627\u0631\u0633\u0627\u0644 \u06A9\u0646\u06CC\u062F:',
+    copy_invite: '\u06A9\u067E\u06CC \u06A9\u062F \u062F\u0639\u0648\u062A',
+    waiting_reply:
+      '\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u067E\u0627\u0633\u062E \u0622\u0646\u200C\u0647\u0627...',
+    manual_tools: '\u0627\u0628\u0632\u0627\u0631\u0647\u0627\u06CC \u062F\u0633\u062A\u06CC',
+    paste_decrypt:
+      '\u0645\u062A\u0646 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0631\u0627 \u0628\u0631\u0627\u06CC \u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F',
+    decrypt: '\u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC',
+    onboarding_input:
+      '\u0628\u0631\u0627\u06CC \u0627\u0631\u0633\u0627\u0644 \u062E\u0648\u062F\u06A9\u0627\u0631\u060C \u0631\u0648\u06CC \u06A9\u0627\u062F\u0631 \u0648\u0631\u0648\u062F\u06CC \u067E\u06CC\u0627\u0645 \u06A9\u0644\u06CC\u06A9 \u06A9\u0646\u06CC\u062F.',
+    onboarding_send:
+      '\u062D\u0627\u0644\u0627 \u0631\u0648\u06CC \u062F\u06A9\u0645\u0647 \u0627\u0631\u0633\u0627\u0644 \u06A9\u0644\u06CC\u06A9 \u06A9\u0646\u06CC\u062F.',
+    onboarding_done:
+      '\u062A\u0646\u0638\u06CC\u0645\u0627\u062A \u06A9\u0627\u0645\u0644 \u0634\u062F! \u0627\u0631\u0633\u0627\u0644 \u062E\u0648\u062F\u06A9\u0627\u0631 \u0628\u0631\u0627\u06CC \u0627\u06CC\u0646 \u0633\u0627\u06CC\u062A \u067E\u06CC\u06A9\u0631\u0628\u0646\u062F\u06CC \u0634\u062F.',
+    onboarding_reset:
+      '\u067E\u06CC\u06A9\u0631\u0628\u0646\u062F\u06CC \u0645\u062C\u062F\u062F \u062A\u0634\u062E\u06CC\u0635 \u0648\u0631\u0648\u062F\u06CC',
+    language: '\u0632\u0628\u0627\u0646',
+    secure: '\u0627\u0645\u0646',
+    fingerprint: '\u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A',
+    fingerprint_match:
+      '\u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A \u062A\u0623\u06CC\u06CC\u062F \u0634\u062F - \u062C\u0644\u0633\u0647 \u0627\u0645\u0646 \u0627\u0633\u062A.',
+    fingerprint_mismatch:
+      '\u0647\u0634\u062F\u0627\u0631: \u0639\u062F\u0645 \u062A\u0637\u0627\u0628\u0642 \u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A! \u062D\u0645\u0644\u0647 MITM \u0645\u0645\u06A9\u0646 \u0627\u0633\u062A. \u0627\u062F\u0627\u0645\u0647 \u0646\u062F\u0647\u06CC\u062F.',
+    compare_fingerprint:
+      '\u0627\u06CC\u0646 \u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A \u0631\u0627 \u0627\u0632 \u06A9\u0627\u0646\u0627\u0644 \u062F\u06CC\u06AF\u0631\u06CC \u0628\u0627 \u0645\u062E\u0627\u0637\u0628 \u0645\u0642\u0627\u06CC\u0633\u0647 \u06A9\u0646\u06CC\u062F:',
+    you: '\u0634\u0645\u0627',
+    them: '\u0622\u0646\u200C\u0647\u0627',
+    session_ended:
+      '\u062C\u0644\u0633\u0647 \u067E\u0627\u06CC\u0627\u0646 \u06CC\u0627\u0641\u062A. \u06A9\u0644\u06CC\u062F\u0647\u0627 \u067E\u0627\u06A9 \u0634\u062F\u0646\u062F.',
+    copy_fallback:
+      '\u0627\u0631\u0633\u0627\u0644 \u062E\u0648\u062F\u06A9\u0627\u0631 \u0645\u0645\u06A9\u0646 \u0646\u0634\u062F. \u06A9\u067E\u06CC \u06A9\u0631\u062F\u0647 \u0648 \u062F\u0633\u062A\u06CC \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F:',
+    what_veil_does:
+      'Veil \u067E\u06CC\u0627\u0645\u200C\u0647\u0627\u06CC \u0634\u0645\u0627 \u0631\u0627 \u0642\u0628\u0644 \u0627\u0632 \u062E\u0631\u0648\u062C \u0627\u0632 \u0645\u0631\u0648\u0631\u06AF\u0631 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0645\u06CC\u200C\u06A9\u0646\u062F. \u067E\u0644\u062A\u0641\u0631\u0645 \u067E\u06CC\u0627\u0645\u200C\u0631\u0633\u0627\u0646 \u0641\u0642\u0637 \u0645\u062A\u0646 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0631\u0627 \u0645\u06CC\u200C\u0628\u06CC\u0646\u062F.',
+    what_veil_cannot:
+      'Veil \u0646\u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u062F \u062F\u0631 \u0628\u0631\u0627\u0628\u0631 \u0622\u0644\u0648\u062F\u06AF\u06CC \u062F\u0633\u062A\u06AF\u0627\u0647 (\u0628\u062F\u0627\u0641\u0632\u0627\u0631\u060C \u062C\u0627\u0633\u0648\u0633\u200C\u0627\u0641\u0632\u0627\u0631\u060C \u06A9\u06CC\u200C\u0644\u0627\u06AF\u0631)\u060C \u062F\u0633\u062A\u0631\u0633\u06CC \u0641\u06CC\u0632\u06CC\u06A9\u06CC \u0628\u0647 \u062F\u0633\u062A\u06AF\u0627\u0647 \u0628\u0627\u0632\u060C \u06CC\u0627 \u0641\u0631\u0627\u062F\u0627\u062F\u0647 (\u0628\u0627 \u06A9\u06CC \u0635\u062D\u0628\u062A \u0645\u06CC\u200C\u06A9\u0646\u06CC\u062F\u060C \u06A9\u06CC\u060C \u0686\u0642\u062F\u0631) \u0645\u062D\u0627\u0641\u0638\u062A \u06A9\u0646\u062F.',
+    hygiene_note:
+      '\u0648\u0642\u062A\u06CC \u0686\u062A \u0646\u0645\u06CC\u200C\u06A9\u0646\u06CC\u062F \u0645\u0631\u0648\u0631\u06AF\u0631 \u0631\u0627 \u0628\u0628\u0646\u062F\u06CC\u062F. \u062A\u0627 \u0632\u0645\u0627\u0646\u06CC \u06A9\u0647 \u0645\u0631\u0648\u0631\u06AF\u0631 \u0628\u0627\u0632 \u0627\u0633\u062A\u060C \u06A9\u0644\u06CC\u062F\u0647\u0627\u06CC \u062C\u0644\u0633\u0647 \u062F\u0631 \u062D\u0627\u0641\u0638\u0647 \u0648\u062C\u0648\u062F \u062F\u0627\u0631\u0646\u062F.',
+    first_launch_welcome: '\u0628\u0647 Veil \u062E\u0648\u0634 \u0622\u0645\u062F\u06CC\u062F',
+    choose_language: '\u0632\u0628\u0627\u0646 \u062E\u0648\u062F \u0631\u0627 \u0627\u0646\u062A\u062E\u0627\u0628 \u06A9\u0646\u06CC\u062F',
+    handshake_received:
+      '\u062F\u0639\u0648\u062A \u062F\u0633\u062A\u200C\u062F\u0627\u062F \u0634\u0646\u0627\u0633\u0627\u06CC\u06CC \u0634\u062F. \u062F\u0633\u062A\u200C\u062F\u0627\u062F \u0631\u0627 \u062A\u06A9\u0645\u06CC\u0644 \u0645\u06CC\u200C\u06A9\u0646\u06CC\u062F\u061F',
+    accept_handshake: '\u0642\u0628\u0648\u0644 \u0648 \u0627\u062A\u0635\u0627\u0644',
+    step1_title:
+      '\u0645\u0631\u062D\u0644\u0647 \u06F1: \u0633\u0627\u062E\u062A \u062F\u0639\u0648\u062A',
+    step1_desc:
+      '\u0628\u0631\u0627\u06CC \u0633\u0627\u062E\u062A \u06A9\u062F \u062F\u0639\u0648\u062A \u0627\u0645\u0646 \u06A9\u0644\u06CC\u06A9 \u06A9\u0646\u06CC\u062F. \u0627\u06CC\u0646 \u06A9\u062F \u0631\u0627 \u0627\u0632 \u0637\u0631\u06CC\u0642 \u0686\u062A \u0628\u0631\u0627\u06CC \u0645\u062E\u0627\u0637\u0628 \u062E\u0648\u062F \u0627\u0631\u0633\u0627\u0644 \u06A9\u0646\u06CC\u062F.',
+    step2_title:
+      '\u0645\u0631\u062D\u0644\u0647 \u06F2: \u0627\u0646\u062A\u0638\u0627\u0631 \u067E\u0627\u0633\u062E',
+    step2_desc:
+      '\u0645\u062E\u0627\u0637\u0628 \u0634\u0645\u0627 \u0628\u0627\u06CC\u062F Veil \u0631\u0627 \u0628\u0627\u0632 \u06A9\u0646\u062F\u060C \u00AB\u06A9\u062F \u062F\u0639\u0648\u062A \u062F\u0631\u06CC\u0627\u0641\u062A \u06A9\u0631\u062F\u0645\u00BB \u0631\u0627 \u0628\u0632\u0646\u062F \u0648 \u06A9\u062F \u0634\u0645\u0627 \u0631\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u062F.',
+    step3_title:
+      '\u0645\u0631\u062D\u0644\u0647 \u06F3: \u0645\u062A\u0635\u0644 \u0634\u062F!',
+    step3_desc:
+      '\u0647\u0631 \u062F\u0648 \u0637\u0631\u0641 \u062A\u0623\u06CC\u06CC\u062F \u0634\u062F\u0646\u062F. \u0627\u06A9\u0646\u0648\u0646 \u0645\u06CC\u200C\u062A\u0648\u0627\u0646\u06CC\u062F \u067E\u06CC\u0627\u0645 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0627\u0631\u0633\u0627\u0644 \u06A9\u0646\u06CC\u062F.',
+    create_invite: '\u0633\u0627\u062E\u062A \u062F\u0639\u0648\u062A',
+    i_received_invite: '\u06A9\u062F \u062F\u0639\u0648\u062A \u062F\u0631\u06CC\u0627\u0641\u062A \u06A9\u0631\u062F\u0645',
+    paste_invite_prompt:
+      '\u06A9\u062F \u062F\u0639\u0648\u062A\u06CC \u06A9\u0647 \u0627\u0632 \u0645\u062E\u0627\u0637\u0628 \u062F\u0631\u06CC\u0627\u0641\u062A \u06A9\u0631\u062F\u06CC\u062F \u0631\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F:',
+    paste_here: '\u06A9\u062F \u062F\u0639\u0648\u062A \u0631\u0627 \u0627\u06CC\u0646\u062C\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F...',
+    connect: '\u0627\u062A\u0635\u0627\u0644',
+    status_generating:
+      '\u062F\u0631 \u062D\u0627\u0644 \u0633\u0627\u062E\u062A \u06A9\u0644\u06CC\u062F\u0647\u0627\u06CC \u0627\u0645\u0646...',
+    status_connected: '\u0645\u062A\u0635\u0644 \u0648 \u062A\u0623\u06CC\u06CC\u062F \u0634\u062F\u0647',
+    status_waiting:
+      '\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u067E\u0627\u0633\u062E \u0645\u062E\u0627\u0637\u0628...',
+    how_it_works: '\u0646\u062D\u0648\u0647 \u06A9\u0627\u0631',
+    how_it_works_desc:
+      '\u06F1. \u06CC\u06A9 \u0646\u0641\u0631 \u062F\u0639\u0648\u062A \u0645\u06CC\u200C\u0633\u0627\u0632\u062F \u0648 \u06A9\u062F \u0631\u0627 \u0627\u0631\u0633\u0627\u0644 \u0645\u06CC\u200C\u06A9\u0646\u062F\n\u06F2. \u0646\u0641\u0631 \u062F\u06CC\u06AF\u0631 \u06A9\u062F \u0631\u0627 \u0645\u06CC\u200C\u0686\u0633\u0628\u0627\u0646\u062F \u0648 \u0645\u062A\u0635\u0644 \u0645\u06CC\u200C\u0634\u0648\u062F\n\u06F3. \u0647\u0631 \u062F\u0648 \u0637\u0631\u0641 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0633\u0631\u062A\u0627\u0633\u0631\u06CC \u062F\u0627\u0631\u0646\u062F',
+    or_paste_reply: '\u06CC\u0627 \u06A9\u062F \u067E\u0627\u0633\u062E \u0631\u0627 \u062F\u0633\u062A\u06CC \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F:',
+    paste_reply_here: '\u06A9\u062F \u067E\u0627\u0633\u062E \u0631\u0627 \u0627\u06CC\u0646\u062C\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F...',
+    submit_reply: '\u062B\u0628\u062A \u067E\u0627\u0633\u062E',
+    paste_incoming:
+      '\u067E\u06CC\u0627\u0645 \u062F\u0631\u06CC\u0627\u0641\u062A\u06CC \u0631\u0627 \u0628\u0631\u0627\u06CC \u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F:',
+    paste_incoming_here:
+      '\u067E\u06CC\u0627\u0645 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0631\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F...',
+    decrypt_incoming: '\u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC',
+  },
+};
+
+let _veilLang: Language = 'en';
+
+export function t(key: StringKey): string {
+  return (STRINGS[_veilLang] && STRINGS[_veilLang][key]) || STRINGS.en[key] || key;
+}
+
+export function setLang(lang: Language): void {
+  _veilLang = lang;
+}
+
+export function getLang(): Language {
+  return _veilLang;
+}
