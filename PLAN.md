@@ -10,7 +10,7 @@ unit tests for it before moving to the next layer.
 ```
 src/types.ts        ← pure type definitions, no logic
 src/crypto.ts       ← no Veil dependencies, just WebCrypto        ✅ DONE
-src/disguise.ts     ← imports types.ts
+src/disguise.ts     ← imports types.ts                              ✅ DONE
 src/i18n.ts         ← imports types.ts
 src/background.ts   ← no Veil dependencies, just Chrome APIs
 src/content.ts      ← imports crypto + disguise
@@ -30,15 +30,16 @@ src/sidebar.ts      ← imports crypto + disguise + i18n             (top)
 
 ---
 
-### ⬜ src/disguise.ts — NEXT
-- Zero-width Unicode marker system (PREFIX, SUFFIX, HANDSHAKE_, VERIFY_)
+### ✅ src/disguise.ts — DONE
+- Redesigned from zero-width Unicode markers to visible bracket tags [VL:E/H/V]...[/VL]
 - wrap/unwrap for messages, handshakes, and verify messages
-- isVeilMessage / isHandshake / isVerifyMessage detection logic
-- Fallback parsing when messengers strip invisible characters
-- Tests: marker round-trips, detection, fallback parsing, collision/confusion
-  between marker types
+- isAnyVeil / isVeilMessage / isHandshake / isVerifyMessage detection logic
+- Dropped fallback parser (visible tags are never stripped by messengers)
+- Tests: `test/disguise.test.ts` — 63 tests, all passing
+- Topics covered: constants, isAnyVeil, wrap/unwrap round-trips, type
+  discrimination, edge cases, integration with VeilCrypto
 
-### ⬜ src/i18n.ts
+### ⬜ src/i18n.ts — NEXT
 - STRINGS object structure (en + fa)
 - `t(key)` lookup with fallback chain
 - `setLang` / `getLang` module state
