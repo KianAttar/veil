@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Veil",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "End-to-end encryption layer for any web messenger",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "tabs"
   ],
   "background": {
     "service_worker": "background.js"
@@ -23,12 +24,7 @@
   },
   "action": {
     "default_icon": "icons/icon48.png",
-    "default_title": "Toggle Veil"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": ["sidebar.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+    "default_title": "Veil",
+    "default_popup": "popup.html"
+  }
 }

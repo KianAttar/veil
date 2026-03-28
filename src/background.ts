@@ -1,38 +1,44 @@
 // Veil — Background service worker
-// Routes messages between sidebar and content scripts, holds no persistent state
+// Routes messages between popup and content script, holds no persistent state.
 
-chrome.action.onClicked.addListener((tab) => {
-  if (tab.id !== undefined) {
-    chrome.tabs.sendMessage(tab.id, { type: 'TOGGLE_SIDEBAR' });
-  }
-});
+// Allow content scripts to access chrome.storage.session (default is extension-only)
+chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
 
-// Route messages between sidebar (iframe) and content script
+/** Find the active tab reliably — even when called from a popup.
+ *  Service workers don't have a stable "currentWindow" — query ALL active tabs
+ *  and pick the most recently accessed non-extension tab. */
+function getActiveTab(callback: (tab: chrome.tabs.Tab | null) => void): void {
+  chrome.tabs.query({ active: true }, (tabs) => {
+    // Filter to real pages, sort by lastAccessed (most recent first)
+    const candidates = tabs
+      .filter((t) => t.url && !t.url.startsWith('chrome-extension://') && !t.url.startsWith('chrome://'))
+      .sort((a, b) => (b.lastAccessed ?? 0) - (a.lastAccessed ?? 0));
+    console.log('Veil bg: getActiveTab candidates:', candidates.map((t) => ({ id: t.id, url: t.url })));
+    callback(candidates[0] ?? null);
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  // Forward from popup to content script in active tab
   if (message.target === 'content') {
-    // Forward from sidebar to content script in active tab
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].id !== undefined) {
-        chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
+    getActiveTab((tab) => {
+      if (tab && tab.id !== undefined) {
+        chrome.tabs.sendMessage(tab.id, message, (response) => {
           sendResponse(response);
         });
+      } else {
+        sendResponse(null);
       }
     });
     return true; // async response
   }
 
-  if (message.target === 'sidebar') {
-    // Forward from content script to sidebar — sidebar listens via runtime.onMessage
-    // The sidebar iframe receives this directly since it shares the extension context
-    // No explicit forwarding needed — both listen on chrome.runtime.onMessage
-    sendResponse({ ok: true });
-  }
-
+  // Popup asks for the active tab's hostname
   if (message.type === 'GET_TAB_HOSTNAME') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0] && tabs[0].url) {
+    getActiveTab((tab) => {
+      if (tab && tab.url) {
         try {
-          const url = new URL(tabs[0].url);
+          const url = new URL(tab.url);
           sendResponse({ hostname: url.hostname });
         } catch {
           sendResponse({ hostname: '' });

@@ -478,10 +478,10 @@ describe('7. Fingerprint', () => {
     expect(fp1).not.toBe(fp2);
   });
 
-  it('7.4 order matters — fingerprint(a, b) !== fingerprint(b, a)', async () => {
+  it('7.4 fingerprint is commutative — fingerprint(a, b) === fingerprint(b, a)', async () => {
     const fpAB = await VeilCrypto.computeFingerprint(pubA, pubB);
     const fpBA = await VeilCrypto.computeFingerprint(pubB, pubA);
-    expect(fpAB).not.toBe(fpBA);
+    expect(fpAB).toBe(fpBA);
   });
 
   it('7.5 MITM: Eve substitutes her key — Alice and Bob compute different fingerprints', async () => {

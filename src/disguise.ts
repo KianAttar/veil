@@ -1,108 +1,159 @@
-// Veil — Ciphertext disguise layer (v1: zero-width markers + raw base64)
-// v1 uses invisible Unicode markers to identify Veil messages in chat
+// Veil — Ciphertext disguise layer (v3: invite/reply protocol with nonce + timestamp)
+// Tags are reliable across all messengers and trivial to find in the DOM.
 
-import type { HandshakeData } from './types';
+import type { HandshakePayload } from './types';
 
-// Visible prefix for all Veil messages — makes them easy to find in chat DOM
-const VEIL_TAG = 'VEIL:';
+// Tag format: [VL:X]payload[/VL]
+// I = invite (handshake initiation), R = reply (handshake response)
+// E = encrypted message, V = verify fingerprint, X = end session
+const TAG_I_OPEN = '[VL:I]';
+const TAG_R_OPEN = '[VL:R]';
+const TAG_E_OPEN = '[VL:E]';
+const TAG_V_OPEN = '[VL:V]';
+const TAG_X_OPEN = '[VL:X]';
+const TAG_CLOSE  = '[/VL]';
 
-// Zero-width characters used as prefix/suffix markers
-// These are invisible in all messenger UIs
-const PREFIX = '\u200B\u200C\u200D\uFEFF'; // ZWS + ZWNJ + ZWJ + BOM
-const SUFFIX = '\uFEFF\u200D\u200C\u200B'; // Reversed order
+// Detects any Veil message without knowing the type
+function isAnyVeil(text: string): boolean {
+  return text.includes('[VL:');
+}
 
-// Handshake markers (different from message markers)
-const HANDSHAKE_PREFIX = '\u200C\u200B\u200D\uFEFF';
-const HANDSHAKE_SUFFIX = '\uFEFF\u200D\u200B\u200C';
+// --- Shared handshake payload parsing ---
+// Payload format: pubkey.sig.nonce.timestamp (4 dot-separated fields)
 
-// Verify marker for fingerprint verification messages
-const VERIFY_PREFIX = '\u200D\u200C\u200B\uFEFF';
-const VERIFY_SUFFIX = '\uFEFF\u200B\u200C\u200D';
+function parseHandshakePayload(payload: string): HandshakePayload | null {
+  const parts = payload.split('.');
+  if (parts.length !== 4) return null;
+  const timestamp = parseInt(parts[3], 10);
+  if (isNaN(timestamp)) return null;
+  return {
+    publicKey: parts[0],
+    signature: parts[1],
+    nonce: parts[2],
+    timestamp,
+  };
+}
+
+function formatHandshakePayload(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${publicKey}.${signature}.${nonce}.${timestamp}`;
+}
+
+// --- Invite ---
+
+function wrapInvite(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${TAG_I_OPEN}${formatHandshakePayload(publicKey, signature, nonce, timestamp)}${TAG_CLOSE}`;
+}
+
+function unwrapInvite(text: string): HandshakePayload | null {
+  const start = text.indexOf(TAG_I_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_I_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return parseHandshakePayload(text.slice(payloadStart, end));
+}
+
+function isInvite(text: string): boolean {
+  return text.includes(TAG_I_OPEN);
+}
+
+// --- Reply ---
+
+function wrapReply(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${TAG_R_OPEN}${formatHandshakePayload(publicKey, signature, nonce, timestamp)}${TAG_CLOSE}`;
+}
+
+function unwrapReply(text: string): HandshakePayload | null {
+  const start = text.indexOf(TAG_R_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_R_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return parseHandshakePayload(text.slice(payloadStart, end));
+}
+
+function isReply(text: string): boolean {
+  return text.includes(TAG_R_OPEN);
+}
+
+// --- Encrypted message ---
 
 function wrapMessage(base64Ciphertext: string): string {
-  return VEIL_TAG + PREFIX + base64Ciphertext + SUFFIX;
+  return `${TAG_E_OPEN}${base64Ciphertext}${TAG_CLOSE}`;
 }
 
 function unwrapMessage(text: string): string | null {
-  // Try invisible markers first
-  const prefixIdx = text.indexOf(PREFIX);
-  if (prefixIdx !== -1) {
-    const suffixIdx = text.indexOf(SUFFIX, prefixIdx + PREFIX.length);
-    if (suffixIdx !== -1) return text.slice(prefixIdx + PREFIX.length, suffixIdx);
-  }
-  // Fallback: markers were stripped, look for VEIL: tag with raw base64
-  const tagIdx = text.indexOf(VEIL_TAG);
-  if (tagIdx !== -1) {
-    const after = text.slice(tagIdx + VEIL_TAG.length).replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
-    if (after.length > 10) return after;
-  }
-  return null;
+  const start = text.indexOf(TAG_E_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_E_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return text.slice(payloadStart, end);
 }
 
 function isVeilMessage(text: string): boolean {
-  return (text.includes(PREFIX) && text.includes(SUFFIX)) || text.includes(VEIL_TAG);
+  return text.includes(TAG_E_OPEN);
 }
 
-function wrapHandshake(publicKeyBase64: string, signatureBase64: string): string {
-  return VEIL_TAG + HANDSHAKE_PREFIX + publicKeyBase64 + '.' + signatureBase64 + HANDSHAKE_SUFFIX;
-}
-
-function unwrapHandshake(text: string): HandshakeData | null {
-  // Try invisible markers first
-  const prefixIdx = text.indexOf(HANDSHAKE_PREFIX);
-  if (prefixIdx !== -1) {
-    const suffixIdx = text.indexOf(HANDSHAKE_SUFFIX, prefixIdx + HANDSHAKE_PREFIX.length);
-    if (suffixIdx !== -1) {
-      const payload = text.slice(prefixIdx + HANDSHAKE_PREFIX.length, suffixIdx);
-      const dotIdx = payload.indexOf('.');
-      if (dotIdx !== -1) {
-        return { publicKey: payload.slice(0, dotIdx), signature: payload.slice(dotIdx + 1) };
-      }
-    }
-  }
-  // Fallback: markers stripped, try VEIL: tag + raw key.sig
-  const tagIdx = text.indexOf(VEIL_TAG);
-  if (tagIdx !== -1) {
-    const after = text.slice(tagIdx + VEIL_TAG.length).replace(/[\u200B\u200C\u200D\uFEFF]/g, '').trim();
-    const dotIdx = after.indexOf('.');
-    if (dotIdx > 0 && dotIdx < after.length - 1) {
-      return { publicKey: after.slice(0, dotIdx), signature: after.slice(dotIdx + 1) };
-    }
-  }
-  return null;
-}
-
-function isHandshake(text: string): boolean {
-  return (text.includes(HANDSHAKE_PREFIX) && text.includes(HANDSHAKE_SUFFIX)) || text.includes(VEIL_TAG);
-}
+// --- Fingerprint verification ---
 
 function wrapVerify(encryptedFingerprint: string): string {
-  return VEIL_TAG + VERIFY_PREFIX + encryptedFingerprint + VERIFY_SUFFIX;
+  return `${TAG_V_OPEN}${encryptedFingerprint}${TAG_CLOSE}`;
 }
 
 function unwrapVerify(text: string): string | null {
-  const prefixIdx = text.indexOf(VERIFY_PREFIX);
-  if (prefixIdx === -1) return null;
-  const suffixIdx = text.indexOf(VERIFY_SUFFIX, prefixIdx + VERIFY_PREFIX.length);
-  if (suffixIdx === -1) return null;
-  return text.slice(prefixIdx + VERIFY_PREFIX.length, suffixIdx);
+  const start = text.indexOf(TAG_V_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_V_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return text.slice(payloadStart, end);
 }
 
 function isVerifyMessage(text: string): boolean {
-  return text.includes(VERIFY_PREFIX) && text.includes(VERIFY_SUFFIX);
+  return text.includes(TAG_V_OPEN);
+}
+
+// --- End session ---
+
+function wrapEnd(encryptedTimestamp: string): string {
+  return `${TAG_X_OPEN}${encryptedTimestamp}${TAG_CLOSE}`;
+}
+
+function unwrapEnd(text: string): string | null {
+  const start = text.indexOf(TAG_X_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_X_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return text.slice(payloadStart, end);
+}
+
+function isEndMessage(text: string): boolean {
+  return text.includes(TAG_X_OPEN);
 }
 
 export const VeilDisguise = {
+  isAnyVeil,
+  wrapInvite,
+  unwrapInvite,
+  isInvite,
+  wrapReply,
+  unwrapReply,
+  isReply,
   wrapMessage,
   unwrapMessage,
   isVeilMessage,
-  wrapHandshake,
-  unwrapHandshake,
-  isHandshake,
   wrapVerify,
   unwrapVerify,
   isVerifyMessage,
-  VEIL_TAG,
-  PREFIX,
-  SUFFIX,
+  wrapEnd,
+  unwrapEnd,
+  isEndMessage,
+  TAG_I_OPEN,
+  TAG_R_OPEN,
+  TAG_E_OPEN,
+  TAG_V_OPEN,
+  TAG_X_OPEN,
+  TAG_CLOSE,
 };

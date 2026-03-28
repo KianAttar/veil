@@ -1,11 +1,10 @@
-import { test, expect, chromium, BrowserContext, Page, Frame } from '@playwright/test';
+import { test, expect, chromium, BrowserContext, Page } from '@playwright/test';
 import path from 'path';
 import http from 'http';
 import fs from 'fs';
 
 const EXT_PATH = path.resolve(__dirname, '..');
 const CHAT_PAGE = path.resolve(__dirname, 'chat-page.html');
-const SIDEBAR_WIDTH = 360;
 
 let server: http.Server;
 let serverUrl: string;
@@ -43,17 +42,8 @@ function launchBrowser(): Promise<BrowserContext> {
   });
 }
 
-async function waitForSidebarFrame(page: Page, timeout = 10000): Promise<Frame> {
-  const start = Date.now();
-  while (Date.now() - start < timeout) {
-    const frame = page.frames().find((f) => f.url().includes('sidebar.html'));
-    if (frame) return frame;
-    await page.waitForTimeout(200);
-  }
-  throw new Error('Sidebar frame not found');
-}
-
-async function openSidebar(page: Page, context: BrowserContext): Promise<void> {
+/** Get the service worker so we can send messages to the content script. */
+async function getServiceWorker(context: BrowserContext) {
   let sw = context.serviceWorkers().find((w) => w.url().includes('background.js'));
   if (!sw) {
     sw = await context.waitForEvent('serviceworker', {
@@ -61,54 +51,104 @@ async function openSidebar(page: Page, context: BrowserContext): Promise<void> {
       timeout: 10000,
     });
   }
-  await sw.evaluate(() => {
-    return new Promise<void>((resolve) => {
+  return sw;
+}
+
+/** Send a message to the content script via the background service worker. */
+async function sendToContent(context: BrowserContext, msg: Record<string, unknown>) {
+  const sw = await getServiceWorker(context);
+  return sw.evaluate((m) => {
+    return new Promise<unknown>((resolve) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0] && tabs[0].id !== undefined) {
-          chrome.tabs.sendMessage(tabs[0].id, { type: 'TOGGLE_SIDEBAR' }, () => resolve());
-        } else resolve();
+          chrome.tabs.sendMessage(tabs[0].id, m, (resp) => resolve(resp));
+        } else {
+          resolve(null);
+        }
       });
     });
-  });
+  }, msg);
 }
 
-async function closeSidebar(page: Page, context: BrowserContext): Promise<void> {
-  await openSidebar(page, context);
+/**
+ * Perform onboarding for a browser context:
+ * 1. Send START_ONBOARDING to content
+ * 2. Type in chat input (triggers input detection)
+ * 3. Click send button (triggers send button detection)
+ */
+async function doOnboarding(page: Page, context: BrowserContext): Promise<void> {
+  await sendToContent(context, { type: 'START_ONBOARDING' });
+  await page.waitForTimeout(300);
+
+  // Step 1: Type in the chat input to trigger input detection
+  await page.fill('#chatInput', 'test');
+  await page.waitForTimeout(500);
+
+  // Step 2: Click the send button to trigger send button detection
+  await page.click('#sendBtn');
+  await page.waitForTimeout(500);
 }
 
-async function getReplyCode(sidebar: Frame): Promise<string | null> {
-  const systemMsgs = await sidebar.$$eval('.msg-system', (els) =>
-    els.map((e) => e.textContent ?? ''),
-  );
-  for (const m of systemMsgs) {
-    if (m.includes('\u200C\u200B')) return m;
-  }
-  return null;
-}
-
-async function getEncryptedFromChat(page: Page): Promise<string | null> {
-  const msgs = await page.$$eval('#messages .message', (els) =>
-    els.map((el) => el.textContent ?? ''),
-  );
-  for (const m of [...msgs].reverse()) {
-    if (m.includes('\u200B\u200C\u200D')) return m.replace(/^[^:]+:\s*/, '');
-  }
-  return null;
-}
-
-async function injectMessageToChat(page: Page, text: string): Promise<void> {
+/**
+ * Inject a message into the chat DOM and trigger content script scan.
+ * In real usage, MutationObserver handles this automatically when messages
+ * arrive via the page's own JS. In Playwright tests, we need to trigger
+ * a manual scan because page.evaluate runs in a different JS world.
+ */
+async function injectAndScan(page: Page, context: BrowserContext, text: string): Promise<void> {
   await page.evaluate((t) => {
     const div = document.createElement('div');
     div.className = 'message';
     div.appendChild(document.createTextNode(t));
     document.getElementById('messages')!.appendChild(div);
   }, text);
+  await page.waitForTimeout(200);
+  await sendToContent(context, { type: 'DEBUG_SCAN' });
+  await page.waitForTimeout(500);
+}
+
+/** Get Veil payload text from a chat message (skip sender span). */
+async function getVeilPayloads(page: Page): Promise<string[]> {
+  return page.$$eval('#messages .message', (els) => {
+    return els.map((el) => {
+      const texts: string[] = [];
+      el.childNodes.forEach((n) => {
+        if (n.nodeType === Node.TEXT_NODE && n.textContent) {
+          texts.push(n.textContent);
+        }
+      });
+      return texts.join('');
+    }).filter((t) => t.includes('[VL:'));
+  });
+}
+
+/** Get text content of all messages in the chat. */
+async function getChatMessages(page: Page): Promise<string[]> {
+  return page.$$eval('#messages .message', (els) =>
+    els.map((el) => el.textContent ?? ''),
+  );
+}
+
+/** Wait until a message matching a predicate appears in the chat. */
+async function waitForChatMessage(
+  page: Page,
+  predicate: (text: string) => boolean,
+  timeout = 10000,
+): Promise<string> {
+  const start = Date.now();
+  while (Date.now() - start < timeout) {
+    const msgs = await getChatMessages(page);
+    const found = msgs.find(predicate);
+    if (found) return found;
+    await page.waitForTimeout(200);
+  }
+  throw new Error(`Chat message matching predicate not found within ${timeout}ms`);
 }
 
 // ============================================================
-// TEST: Sidebar pushes page content (no overlap)
+// TEST: Onboarding flow
 // ============================================================
-test.describe('Sidebar layout - no overlap', () => {
+test.describe('Onboarding', () => {
   let context: BrowserContext;
 
   test.afterAll(async () => {
@@ -120,82 +160,35 @@ test.describe('Sidebar layout - no overlap', () => {
     await startServer();
   });
 
-  test('fixed-position page content is pushed left when sidebar opens', async () => {
+  test('onboarding detects input and send button', async () => {
     context = await launchBrowser();
     const page = context.pages()[0] || (await context.newPage());
     await page.goto(`${serverUrl}?user=Test`);
-    await page.waitForSelector('#app-shell');
+    await page.waitForSelector('#chatInput');
 
-    const beforeRect = await page.evaluate(() => {
-      const el = document.getElementById('app-shell')!;
-      const rect = el.getBoundingClientRect();
-      return { left: rect.left, right: rect.right, width: rect.width };
-    });
-    const viewportWidth = await page.evaluate(() => window.innerWidth);
-    expect(beforeRect.right).toBeGreaterThanOrEqual(viewportWidth - 2);
-    console.log(
-      'Before sidebar: app-shell right edge = %d, viewport = %d',
-      beforeRect.right,
-      viewportWidth,
-    );
+    await doOnboarding(page, context);
 
-    await openSidebar(page, context);
-    await waitForSidebarFrame(page);
-    await page.waitForTimeout(500);
+    // Verify selectors were stored
+    const sw = await getServiceWorker(context);
+    const stored = await sw.evaluate((hostname: string) => {
+      return new Promise<{ input: string | undefined; send: string | undefined }>((resolve) => {
+        chrome.storage.local.get([
+          `veil_input_selector_${hostname}`,
+          `veil_send_selector_${hostname}`,
+        ], (data) => {
+          resolve({
+            input: data[`veil_input_selector_${hostname}`],
+            send: data[`veil_send_selector_${hostname}`],
+          });
+        });
+      });
+    }, '127.0.0.1');
 
-    const bodyRect = await page.evaluate(() => {
-      const rect = document.body.getBoundingClientRect();
-      return { left: rect.left, right: rect.right, width: rect.width };
-    });
-    const sidebarLeft = viewportWidth - SIDEBAR_WIDTH;
-    console.log('After sidebar: body width = %d, expected ~%d', bodyRect.width, sidebarLeft);
-
-    expect(bodyRect.width).toBeLessThanOrEqual(sidebarLeft + 5);
-
-    const afterRect = await page.evaluate(() => {
-      const el = document.getElementById('app-shell')!;
-      const rect = el.getBoundingClientRect();
-      return { left: rect.left, right: rect.right, width: rect.width };
-    });
-    console.log(
-      'After sidebar: app-shell right = %d, sidebar starts at = %d',
-      afterRect.right,
-      sidebarLeft,
-    );
-    expect(afterRect.right).toBeLessThanOrEqual(sidebarLeft + 5);
-    expect(afterRect.width).toBeLessThan(beforeRect.width);
-
-    const inputRect = await page.evaluate(() => {
-      return document.getElementById('inputArea')!.getBoundingClientRect();
-    });
-    expect(inputRect.right).toBeLessThanOrEqual(sidebarLeft + 5);
-    console.log('Input area right edge = %d (must be <= %d)', inputRect.right, sidebarLeft);
-
-    const headerRect = await page.evaluate(() => {
-      return document.getElementById('app-header')!.getBoundingClientRect();
-    });
-    expect(headerRect.right).toBeLessThanOrEqual(sidebarLeft + 5);
-
-    const sidebarRect = await page.evaluate(() => {
-      const el = document.getElementById('veil-sidebar-container');
-      return el ? el.getBoundingClientRect() : null;
-    });
-    expect(sidebarRect).toBeTruthy();
-    expect(sidebarRect!.left).toBeGreaterThanOrEqual(sidebarLeft - 5);
-    console.log('Sidebar left edge = %d', sidebarRect!.left);
-
-    await closeSidebar(page, context);
-    await page.waitForTimeout(500);
-
-    const restoredRect = await page.evaluate(() => {
-      const el = document.getElementById('app-shell')!;
-      const rect = el.getBoundingClientRect();
-      return { left: rect.left, right: rect.right, width: rect.width };
-    });
-    expect(restoredRect.right).toBeGreaterThanOrEqual(viewportWidth - 2);
-    console.log('After close: app-shell right edge restored to %d', restoredRect.right);
-
-    console.log('\n=== PASS: Sidebar pushes fixed-position content, no overlap ===');
+    expect(stored.input).toBeTruthy();
+    expect(stored.send).toBeTruthy();
+    console.log('Input selector:', stored.input);
+    console.log('Send selector:', stored.send);
+    console.log('\n=== PASS: Onboarding ===');
   });
 });
 
@@ -216,8 +209,8 @@ test.describe('Veil Extension E2E', () => {
     await startServer();
   });
 
-  test('two users complete handshake and exchange encrypted messages', async () => {
-    test.setTimeout(90000);
+  test('two users complete auto-handshake and exchange encrypted messages', async () => {
+    test.setTimeout(120000);
 
     contextA = await launchBrowser();
     contextB = await launchBrowser();
@@ -231,92 +224,112 @@ test.describe('Veil Extension E2E', () => {
     await pageA.waitForSelector('#chatInput');
     await pageB.waitForSelector('#chatInput');
 
-    await openSidebar(pageA, contextA);
-    await openSidebar(pageB, contextB);
-
-    const sidebarA = await waitForSidebarFrame(pageA);
-    const sidebarB = await waitForSidebarFrame(pageB);
-
-    // Select language
-    await sidebarA.click('.lang-btn[data-lang="en"]');
-    await sidebarB.click('.lang-btn[data-lang="en"]');
-    await sidebarA.waitForSelector('#panelNoSession.active');
-    await sidebarB.waitForSelector('#panelNoSession.active');
+    // ===== ONBOARDING =====
+    console.log('--- Onboarding both users ---');
+    await doOnboarding(pageA, contextA);
+    await doOnboarding(pageB, contextB);
 
     // ===== HANDSHAKE =====
 
-    await sidebarA.click('#btnStartSession');
-    await sidebarA.waitForSelector('#panelHandshake.active', { timeout: 5000 });
-    await pageA.waitForTimeout(500);
+    // Alice starts session — sends invite to chat
+    console.log('--- Alice starts session ---');
+    await sendToContent(contextA, { type: 'START_SESSION' });
 
-    const inviteCode = await sidebarA.textContent('#inviteCode');
-    expect(inviteCode!.length).toBeGreaterThan(10);
-    console.log('Alice created invite (%d chars)', inviteCode!.length);
+    const aliceInvite = await waitForChatMessage(
+      pageA, (m) => m.includes('[VL:I]'), 10000,
+    );
+    console.log('Alice sent invite (%d chars)', aliceInvite.length);
 
-    await sidebarB.click('#btnCompleteHandshake');
-    await sidebarB.waitForSelector('#panelHandshakeReceived.active');
-    await sidebarB.fill('#pasteInviteInput', inviteCode!);
-    await sidebarB.click('#btnAcceptHandshake');
+    // Get clean invite payload (without sender prefix)
+    const aliceVeil = await getVeilPayloads(pageA);
+    const invitePayload = aliceVeil.find((m) => m.includes('[VL:I]'))!;
 
-    await sidebarB.waitForSelector('#panelSession.active', { timeout: 10000 });
-    console.log('Bob connected');
+    // Forward invite to Bob's chat, then Bob starts session
+    // Bob's startSession will scan DOM, find the invite, and accept it
+    await injectAndScan(pageB, contextB, invitePayload);
+    console.log('--- Bob starts session ---');
+    await sendToContent(contextB, { type: 'START_SESSION' });
+    await pageB.waitForTimeout(2000);
 
+    // Bob should have accepted and sent reply+verify
+    const bobReply = await waitForChatMessage(
+      pageB, (m) => m.includes('[VL:R]'), 10000,
+    );
+    console.log('Bob sent reply (%d chars)', bobReply.length);
+
+    // Forward Bob's reply+verify to Alice
+    const bobVeil = await getVeilPayloads(pageB);
+    const replyPayload = bobVeil.find((m) => m.includes('[VL:R]'));
+    expect(replyPayload).toBeTruthy();
+    await injectAndScan(pageA, contextA, replyPayload!);
+    // Give async completeHandshake time to finish
+    await pageA.waitForTimeout(2000);
+
+    // Verify both sides are established
+    const stateA = await sendToContent(contextA, { type: 'GET_SESSION_STATE' }) as Record<string, unknown>;
+    const stateB = await sendToContent(contextB, { type: 'GET_SESSION_STATE' }) as Record<string, unknown>;
+    console.log('Alice: %s, Bob: %s', stateA?.handshakeState, stateB?.handshakeState);
+    expect(stateA?.handshakeState).toBe('established');
+    expect(stateB?.handshakeState).toBe('established');
+    console.log('=== HANDSHAKE COMPLETE ===');
+
+    // Verify Veil toggle is shown
+    expect(await pageA.$('#veil-toggle-container')).toBeTruthy();
+    expect(await pageB.$('#veil-toggle-container')).toBeTruthy();
+
+    // ===== ENCRYPTED MESSAGING =====
+
+    // Alice types and presses Enter — send interceptor encrypts
+    // Note: the sender's own MutationObserver decrypts the message immediately
+    // in the DOM, so we retrieve the encrypted payload via DEBUG_GET_LAST_ENCRYPTED
+    console.log('--- Alice sends encrypted message ---');
+    await pageA.fill('#chatInput', 'Hello Bob, this is encrypted!');
+    await pageA.press('#chatInput', 'Enter');
+    await pageA.waitForTimeout(1000);
+
+    // Verify Alice sees her own message decrypted (self-decryption)
+    await waitForChatMessage(
+      pageA, (m) => m.includes('\u{1F512}') && m.includes('Hello Bob'), 5000,
+    );
+
+    // Get the encrypted payload that was sent
+    const aliceEnc = await sendToContent(contextA, { type: 'DEBUG_GET_LAST_ENCRYPTED' }) as Record<string, unknown>;
+    const encPayload = aliceEnc?.encrypted as string;
+    expect(encPayload).toBeTruthy();
+    console.log('Alice sent encrypted (%d chars)', encPayload.length);
+
+    // Forward to Bob and scan
+    await injectAndScan(pageB, contextB, encPayload);
     await pageB.waitForTimeout(1000);
-    const replyCode = await getReplyCode(sidebarB);
-    expect(replyCode).toBeTruthy();
-    console.log('Reply code (%d chars)', replyCode!.length);
 
-    await injectMessageToChat(pageA, replyCode!);
-    await pageA.waitForTimeout(4000);
+    // Bob's content script should have decrypted inline
+    const bobDecrypted = await waitForChatMessage(
+      pageB, (m) => m.includes('\u{1F512}') && m.includes('Hello Bob'), 5000,
+    );
+    expect(bobDecrypted).toContain('Hello Bob, this is encrypted!');
+    console.log('Bob decrypted:', bobDecrypted);
 
-    await sidebarA.waitForSelector('#panelSession.active', { timeout: 10000 });
-    console.log('Alice connected - HANDSHAKE COMPLETE');
+    // Bob sends a reply
+    console.log('--- Bob sends encrypted reply ---');
+    await pageB.fill('#chatInput', 'Hi Alice, encryption works!');
+    await pageB.press('#chatInput', 'Enter');
+    await pageB.waitForTimeout(1000);
 
-    // ===== MESSAGING =====
+    const bobEnc = await sendToContent(contextB, { type: 'DEBUG_GET_LAST_ENCRYPTED' }) as Record<string, unknown>;
+    const bobEncPayload = bobEnc?.encrypted as string;
+    expect(bobEncPayload).toBeTruthy();
+    console.log('Bob sent encrypted (%d chars)', bobEncPayload.length);
 
-    await sidebarA.fill('#composeInput', 'Hello Bob, this is encrypted!');
-    await sidebarA.click('#btnSend');
-    await pageA.waitForTimeout(500);
+    // Forward to Alice and scan
+    await injectAndScan(pageA, contextA, bobEncPayload);
+    await pageA.waitForTimeout(1000);
 
-    let aliceEnc: string | null = null;
-    if (await sidebarA.$('#panelCopyFallback.active')) {
-      aliceEnc = await sidebarA.textContent('#fallbackText');
-      await sidebarA.click('#btnBackFromFallback');
-    } else {
-      aliceEnc = await getEncryptedFromChat(pageA);
-    }
+    const aliceDecrypted = await waitForChatMessage(
+      pageA, (m) => m.includes('\u{1F512}') && m.includes('Hi Alice'), 5000,
+    );
+    expect(aliceDecrypted).toContain('Hi Alice, encryption works!');
+    console.log('Alice decrypted:', aliceDecrypted);
 
-    await sidebarA.waitForSelector('.msg-you');
-    expect(await sidebarA.textContent('.msg-you')).toBe('Hello Bob, this is encrypted!');
-
-    if (aliceEnc) {
-      await injectMessageToChat(pageB, aliceEnc);
-      await pageB.waitForTimeout(3000);
-      expect(await sidebarB.textContent('.msg-them')).toBe('Hello Bob, this is encrypted!');
-      console.log("Bob decrypted Alice's message");
-    }
-
-    await sidebarB.fill('#composeInput', 'Hi Alice, encryption works!');
-    await sidebarB.click('#btnSend');
-    await pageB.waitForTimeout(500);
-
-    let bobEnc: string | null = null;
-    if (await sidebarB.$('#panelCopyFallback.active')) {
-      bobEnc = await sidebarB.textContent('#fallbackText');
-      await sidebarB.click('#btnBackFromFallback');
-    } else {
-      bobEnc = await getEncryptedFromChat(pageB);
-    }
-
-    await sidebarB.waitForSelector('.msg-you');
-
-    if (bobEnc) {
-      await injectMessageToChat(pageA, bobEnc);
-      await pageA.waitForTimeout(3000);
-      expect(await sidebarA.textContent('.msg-them')).toBe('Hi Alice, encryption works!');
-      console.log("Alice decrypted Bob's message");
-    }
-
-    console.log('\n=== PASS: Handshake + bidirectional encrypted messaging ===');
+    console.log('\n=== PASS: Full handshake + bidirectional encrypted messaging ===');
   });
 });

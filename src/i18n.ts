@@ -5,7 +5,7 @@ import type { Language, StringKey } from './types';
 type Strings = Record<StringKey, string>;
 type AllStrings = Record<Language, Strings>;
 
-const STRINGS: AllStrings = {
+export const STRINGS: AllStrings = {
   en: {
     app_name: 'VEIL',
     start_session: 'Start Secure Session',
@@ -75,6 +75,31 @@ const STRINGS: AllStrings = {
     paste_incoming: 'Paste incoming message to decrypt:',
     paste_incoming_here: 'Paste encrypted message here...',
     decrypt_incoming: 'Decrypt',
+    // Popup UI
+    popup_connected: 'Connected',
+    popup_waiting_response: 'Waiting for response...',
+    popup_no_session: 'No session',
+    popup_compare_peer: 'Compare this with your peer',
+    popup_inband: 'In-band',
+    popup_server: 'Server',
+    popup_setup_site: 'Set up for this site',
+    popup_reconfigure: 'Re-configure input',
+    popup_setup_needed: 'Set up input detection for this site first.',
+    // Verification statuses
+    verify_checking: 'Checking...',
+    verify_verified: 'Verified',
+    verify_mismatch: 'MISMATCH',
+    verify_unavailable: 'Unavailable',
+    // Tooltips
+    tip_status: 'Shows whether an encrypted session is active with a peer on this page',
+    tip_fingerprint: 'Unique session ID — compare this with your peer through a different app (call, text) to confirm no one is intercepting',
+    tip_inband: 'Checks fingerprint through the messenger itself — catches bugs but not a determined attacker',
+    tip_server: 'Checks fingerprint through Veil\'s server — an independent channel that catches man-in-the-middle attacks',
+    tip_start_session: 'Scan the chat for an existing invite or send one — the other person must also start a session',
+    tip_end_session: 'Sends an end signal to your peer and clears all keys from memory',
+    tip_setup: 'Teach Veil which input box and send button this site uses — needed once per site',
+    tip_reconfigure: 'Re-detect the input box and send button for this site',
+    tip_language: 'Switch interface language',
   },
   fa: {
     app_name: 'VEIL',
@@ -169,8 +194,34 @@ const STRINGS: AllStrings = {
     paste_incoming_here:
       '\u067E\u06CC\u0627\u0645 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0631\u0627 \u0628\u0686\u0633\u0628\u0627\u0646\u06CC\u062F...',
     decrypt_incoming: '\u0631\u0645\u0632\u06AF\u0634\u0627\u06CC\u06CC',
+    // Popup UI
+    popup_connected: '\u0645\u062A\u0635\u0644',
+    popup_waiting_response: '\u062F\u0631 \u0627\u0646\u062A\u0638\u0627\u0631 \u067E\u0627\u0633\u062E...',
+    popup_no_session: '\u0628\u062F\u0648\u0646 \u062C\u0644\u0633\u0647',
+    popup_compare_peer: '\u0627\u06CC\u0646 \u0631\u0627 \u0628\u0627 \u0645\u062E\u0627\u0637\u0628 \u062E\u0648\u062F \u0645\u0642\u0627\u06CC\u0633\u0647 \u06A9\u0646\u06CC\u062F',
+    popup_inband: '\u062F\u0631\u0648\u0646\u200C\u06A9\u0627\u0646\u0627\u0644\u06CC',
+    popup_server: '\u0633\u0631\u0648\u0631',
+    popup_setup_site: '\u0631\u0627\u0647\u200C\u0627\u0646\u062F\u0627\u0632\u06CC \u0628\u0631\u0627\u06CC \u0627\u06CC\u0646 \u0633\u0627\u06CC\u062A',
+    popup_reconfigure: '\u067E\u06CC\u06A9\u0631\u0628\u0646\u062F\u06CC \u0645\u062C\u062F\u062F \u0648\u0631\u0648\u062F\u06CC',
+    popup_setup_needed: '\u0627\u0628\u062A\u062F\u0627 \u062A\u0634\u062E\u06CC\u0635 \u0648\u0631\u0648\u062F\u06CC \u0631\u0627 \u0628\u0631\u0627\u06CC \u0627\u06CC\u0646 \u0633\u0627\u06CC\u062A \u062A\u0646\u0638\u06CC\u0645 \u06A9\u0646\u06CC\u062F.',
+    // Verification statuses
+    verify_checking: '\u062F\u0631 \u062D\u0627\u0644 \u0628\u0631\u0631\u0633\u06CC...',
+    verify_verified: '\u062A\u0623\u06CC\u06CC\u062F \u0634\u062F\u0647',
+    verify_mismatch: '\u0639\u062F\u0645 \u062A\u0637\u0627\u0628\u0642',
+    verify_unavailable: '\u0646\u0627\u0645\u0648\u062C\u0648\u062F',
+    // Tooltips
+    tip_status: '\u0646\u0634\u0627\u0646 \u0645\u06CC\u200C\u062F\u0647\u062F \u0622\u06CC\u0627 \u06CC\u06A9 \u062C\u0644\u0633\u0647 \u0631\u0645\u0632\u06AF\u0630\u0627\u0631\u06CC \u0634\u062F\u0647 \u0628\u0627 \u0645\u062E\u0627\u0637\u0628 \u062F\u0631 \u0627\u06CC\u0646 \u0635\u0641\u062D\u0647 \u0641\u0639\u0627\u0644 \u0627\u0633\u062A',
+    tip_fingerprint: '\u0634\u0646\u0627\u0633\u0647 \u06CC\u06A9\u062A\u0627\u06CC \u062C\u0644\u0633\u0647 \u2014 \u0627\u06CC\u0646 \u0631\u0627 \u0627\u0632 \u0637\u0631\u06CC\u0642 \u0628\u0631\u0646\u0627\u0645\u0647 \u062F\u06CC\u06AF\u0631\u06CC (\u062A\u0645\u0627\u0633\u060C \u067E\u06CC\u0627\u0645\u06A9) \u0628\u0627 \u0645\u062E\u0627\u0637\u0628 \u0645\u0642\u0627\u06CC\u0633\u0647 \u06A9\u0646\u06CC\u062F \u062A\u0627 \u0645\u0637\u0645\u0626\u0646 \u0634\u0648\u06CC\u062F \u06A9\u0633\u06CC \u062F\u0631 \u0645\u06CC\u0627\u0646 \u0646\u06CC\u0633\u062A',
+    tip_inband: '\u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A \u0631\u0627 \u0627\u0632 \u0637\u0631\u06CC\u0642 \u062E\u0648\u062F \u067E\u06CC\u0627\u0645\u200C\u0631\u0633\u0627\u0646 \u0628\u0631\u0631\u0633\u06CC \u0645\u06CC\u200C\u06A9\u0646\u062F \u2014 \u062E\u0637\u0627\u0647\u0627 \u0631\u0627 \u0645\u06CC\u200C\u06AF\u06CC\u0631\u062F \u0627\u0645\u0627 \u0646\u0647 \u062D\u0645\u0644\u0647 \u0647\u062F\u0641\u0645\u0646\u062F',
+    tip_server: '\u0627\u062B\u0631 \u0627\u0646\u06AF\u0634\u062A \u0631\u0627 \u0627\u0632 \u0637\u0631\u06CC\u0642 \u0633\u0631\u0648\u0631 Veil \u0628\u0631\u0631\u0633\u06CC \u0645\u06CC\u200C\u06A9\u0646\u062F \u2014 \u06A9\u0627\u0646\u0627\u0644 \u0645\u0633\u062A\u0642\u0644 \u0628\u0631\u0627\u06CC \u062A\u0634\u062E\u06CC\u0635 \u062D\u0645\u0644\u0627\u062A \u0645\u06CC\u0627\u0646\u06CC',
+    tip_start_session: '\u0686\u062A \u0631\u0627 \u0628\u0631\u0627\u06CC \u062F\u0639\u0648\u062A \u0645\u0648\u062C\u0648\u062F \u0627\u0633\u06A9\u0646 \u06A9\u0646\u06CC\u062F \u06CC\u0627 \u06CC\u06A9\u06CC \u0628\u0641\u0631\u0633\u062A\u06CC\u062F \u2014 \u0637\u0631\u0641 \u0645\u0642\u0627\u0628\u0644 \u0647\u0645 \u0628\u0627\u06CC\u062F \u062C\u0644\u0633\u0647 \u0631\u0627 \u0634\u0631\u0648\u0639 \u06A9\u0646\u062F',
+    tip_end_session: '\u0633\u06CC\u06AF\u0646\u0627\u0644 \u067E\u0627\u06CC\u0627\u0646 \u0631\u0627 \u0628\u0647 \u0645\u062E\u0627\u0637\u0628 \u0645\u06CC\u200C\u0641\u0631\u0633\u062A\u062F \u0648 \u0647\u0645\u0647 \u06A9\u0644\u06CC\u062F\u0647\u0627 \u0631\u0627 \u0627\u0632 \u062D\u0627\u0641\u0638\u0647 \u067E\u0627\u06A9 \u0645\u06CC\u200C\u06A9\u0646\u062F',
+    tip_setup: '\u0628\u0647 Veil \u06CC\u0627\u062F \u062F\u0647\u06CC\u062F \u06A9\u0647 \u06A9\u0627\u062F\u0631 \u0648\u0631\u0648\u062F\u06CC \u0648 \u062F\u06A9\u0645\u0647 \u0627\u0631\u0633\u0627\u0644 \u0627\u06CC\u0646 \u0633\u0627\u06CC\u062A \u06A9\u062C\u0627\u0633\u062A \u2014 \u0641\u0642\u0637 \u06CC\u06A9\u200C\u0628\u0627\u0631 \u0644\u0627\u0632\u0645 \u0627\u0633\u062A',
+    tip_reconfigure: '\u06A9\u0627\u062F\u0631 \u0648\u0631\u0648\u062F\u06CC \u0648 \u062F\u06A9\u0645\u0647 \u0627\u0631\u0633\u0627\u0644 \u0627\u06CC\u0646 \u0633\u0627\u06CC\u062A \u0631\u0627 \u062F\u0648\u0628\u0627\u0631\u0647 \u062A\u0634\u062E\u06CC\u0635 \u062F\u0647\u06CC\u062F',
+    tip_language: '\u062A\u063A\u06CC\u06CC\u0631 \u0632\u0628\u0627\u0646 \u0631\u0627\u0628\u0637 \u06A9\u0627\u0631\u0628\u0631\u06CC',
   },
 };
+
 
 let _veilLang: Language = 'en';
 

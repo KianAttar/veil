@@ -2,8 +2,11 @@ node_modules/
 test-results/
 pnpm-workspace.yaml
 .claude/
+.playwright-mcp/
+*.png
+!icons/*.png
 
 # esbuild output
 background.js
 content.js
-sidebar.js
+popup.js

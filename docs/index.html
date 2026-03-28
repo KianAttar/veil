@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veil — End-to-end encryption for any web messenger</title>
+  <meta name="description" content="Veil is a Chrome extension that adds end-to-end encryption to any web messenger. No accounts, no servers storing your messages, keys exist only in RAM.">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-surface: #12121a;
+      --bg-elevated: #1a1a26;
+      --border: #2a2a3a;
+      --text: #e0e0e8;
+      --text-dim: #8888a0;
+      --accent: #6c63ff;
+      --accent-hover: #7b73ff;
+      --accent-glow: rgba(108, 99, 255, 0.15);
+      --danger: #ff4757;
+      --success: #2ed573;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* --- Nav --- */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 10, 15, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* --- Sections --- */
+    section {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    /* --- Hero --- */
+    .hero {
+      padding-top: 160px;
+      padding-bottom: 100px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 20px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-dim);
+      max-width: 540px;
+      margin: 0 auto 36px;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 32px;
+      background: var(--accent);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .hero-cta:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .hero-cta svg {
+      width: 20px;
+      height: 20px;
+    }
+    .hero-secondary {
+      display: inline-block;
+      margin-left: 16px;
+      padding: 14px 28px;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 500;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .hero-secondary:hover {
+      border-color: var(--text-dim);
+      background: var(--bg-surface);
+    }
+
+    /* --- How it works --- */
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 48px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .step {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: var(--accent); }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .step h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* --- Security --- */
+    .security-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .sec-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+    .sec-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sec-card p, .sec-card ul {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .sec-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sec-card ul li {
+      padding: 4px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+    .sec-card ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .sec-card.does ul li::before { background: var(--success); }
+    .sec-card.limits ul li::before { background: var(--text-dim); }
+    .sec-card.limits {
+      border-color: rgba(255, 71, 87, 0.2);
+    }
+    .sec-card.limits h3 .icon { color: var(--danger); }
+
+    /* --- Privacy --- */
+    .privacy-points {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .priv-point {
+      text-align: center;
+      padding: 32px 20px;
+    }
+    .priv-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .priv-point h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .priv-point p {
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+
+    /* --- Verify --- */
+    .verify-info {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+    .verify-info p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+    .verify-info p:last-child { margin-bottom: 0; }
+    .verify-channels {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .verify-ch {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .verify-ch h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .verify-ch p {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 0;
+    }
+    .verify-ch .ch-icon {
+      font-size: 24px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    /* --- Footer --- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    footer p {
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* --- Responsive --- */
+    @media (max-width: 700px) {
+      .steps,
+      .security-grid,
+      .privacy-points,
+      .verify-channels {
+        grid-template-columns: 1fr;
+      }
+      .hero-secondary {
+        display: block;
+        margin: 12px auto 0;
+        max-width: 260px;
+        text-align: center;
+      }
+      .nav-links { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">VEIL</a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#security">Security</a>
+        <a href="#privacy">Privacy</a>
+        <a href="https://github.com/KianAttar/veil">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-badge">Open Source</div>
+    <h1>End-to-end encryption<br>for <em>any</em> web messenger</h1>
+    <p>Veil encrypts your messages before they leave your browser. The platform only sees ciphertext. No accounts, no servers storing your messages.</p>
+    <a href="#" class="hero-cta">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+      Add to Chrome
+    </a>
+    <a href="#how" class="hero-secondary">Learn more</a>
+  </section>
+
+  <section id="how">
+    <div class="section-label">How it works</div>
+    <h2 class="section-title">Three steps to encrypted chat</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Create an invite</h3>
+        <p>Click "Start Session" in the Veil popup. An invite code is generated using your ephemeral key pair and sent through the chat.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Your peer connects</h3>
+        <p>They open Veil, start a session, and the extension automatically detects your invite. A reply code is sent back.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Chat encrypted</h3>
+        <p>Both sides derive a shared secret. Every message you type is encrypted with AES-256-GCM before it enters the chat.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="security">
+    <div class="section-label">Security model</div>
+    <h2 class="section-title">What Veil protects and what it does not</h2>
+    <div class="security-grid">
+      <div class="sec-card does">
+        <h3><span class="icon" style="color: var(--success)">&#x2713;</span> What Veil does</h3>
+        <ul>
+          <li>Encrypts messages end-to-end with AES-256-GCM</li>
+          <li>Generates fresh ECDH P-256 key pairs per session</li>
+          <li>Derives shared secrets with HKDF</li>
+          <li>Verifies session integrity through fingerprint comparison</li>
+          <li>Detects man-in-the-middle attacks via out-of-band server verification</li>
+          <li>Sends an end signal so both sides wipe keys simultaneously</li>
+        </ul>
+      </div>
+      <div class="sec-card limits">
+        <h3><span class="icon">&#x26A0;</span> What Veil cannot protect</h3>
+        <ul>
+          <li>Device-level compromise (malware, spyware, keyloggers)</li>
+          <li>Physical access to an unlocked device</li>
+          <li>Metadata: who you talk to, when, and how often</li>
+          <li>Screenshots or screen recording by the platform or OS</li>
+          <li>A compromised browser or extension store supply chain</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="verify-info" style="margin-top: 24px;">
+      <div class="section-label">Verification</div>
+      <p>Every session generates a short fingerprint code. Veil checks it through three independent channels so you know no one is intercepting.</p>
+      <div class="verify-channels">
+        <div class="verify-ch">
+          <span class="ch-icon">&#x1F50D;</span>
+          <h4>In-band</h4>
+          <p>Automatic check through the messenger itself. Catches bugs and accidental mismatches.</p>
+        </div>
+        <div class="verify-ch">
+          <span class="ch-icon">&#x1F5A5;</span>
+          <h4>Server</h4>
+          <p>Independent check through Veil's relay server. Catches active man-in-the-middle attacks.</p>
+        </div>
+        <div class="verify-ch">
+          <span class="ch-icon">&#x1F4DE;</span>
+          <h4>Out-of-band</h4>
+          <p>Compare the fingerprint through a call or different app. The strongest guarantee.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="privacy">
+    <div class="section-label">Privacy</div>
+    <h2 class="section-title">Designed to know nothing about you</h2>
+    <div class="privacy-points">
+      <div class="priv-point">
+        <span class="priv-icon">&#x1F6AB;</span>
+        <h3>No accounts</h3>
+        <p>No sign-up, no email, no phone number. Install and use.</p>
+      </div>
+      <div class="priv-point">
+        <span class="priv-icon">&#x1F4AD;</span>
+        <h3>Keys in RAM only</h3>
+        <p>Session keys live in <code>chrome.storage.session</code> &mdash; memory only, never written to disk. Close the browser and they are gone.</p>
+      </div>
+      <div class="priv-point">
+        <span class="priv-icon">&#x1F513;</span>
+        <h3>Open source</h3>
+        <p>Every line of code is public. Audit it, fork it, build on it.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Veil is open source under the <a href="https://github.com/KianAttar/veil/blob/main/LICENSE">MIT License</a>. View on <a href="https://github.com/KianAttar/veil">GitHub</a>.</p>
+  </footer>
+
+</body>
+</html>
