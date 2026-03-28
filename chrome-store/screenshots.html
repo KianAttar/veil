@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0f; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+    .screenshot {
+      width: 1280px;
+      height: 800px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      background: #0a0a0f;
+    }
+
+    /* --- Shared popup styles --- */
+    .popup {
+      width: 320px;
+      background: #0a0a0f;
+      color: #e0e0e8;
+      padding: 16px;
+      font-size: 14px;
+      border-radius: 12px;
+      border: 1px solid #2a2a3a;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .popup h1 { font-size: 18px; font-weight: 700; letter-spacing: 2px; margin-bottom: 12px; }
+    .hostname { color: #8888a0; font-size: 12px; margin-bottom: 12px; }
+    .status-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+      padding: 8px 12px; background: #12121a; border-radius: 8px; border: 1px solid #2a2a3a;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot.idle { background: #8888a0; }
+    .dot.established { background: #2ed573; }
+    .dot.invited { background: #ffa502; }
+    .fingerprint {
+      font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 3px;
+      color: #6c63ff; text-align: center; padding: 12px;
+      background: #12121a; border-radius: 8px; border: 1px solid #2a2a3a; margin-bottom: 4px;
+    }
+    .fp-label { font-size: 11px; color: #8888a0; text-align: center; margin-bottom: 12px; }
+    .verify-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; background: #12121a; border-radius: 8px;
+      border: 1px solid #2a2a3a; font-size: 12px; margin-bottom: 4px;
+    }
+    .verify-label { color: #8888a0; }
+    .verify-status { margin-left: auto; font-weight: 600; }
+    .verify-status.verified { color: #2ed573; }
+    .verify-status.pending { color: #8888a0; }
+    .btn {
+      display: block; width: 100%; padding: 10px 16px; border: none;
+      border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px;
+    }
+    .btn-primary { background: #6c63ff; color: white; }
+    .btn-danger { background: transparent; color: #ff4757; border: 1px solid #ff4757; }
+    .btn-secondary { background: #1a1a26; color: #e0e0e8; border: 1px solid #2a2a3a; }
+    .lang-row {
+      display: flex; gap: 8px; margin-top: 12px; padding-top: 12px;
+      border-top: 1px solid #2a2a3a;
+    }
+    .lang-btn {
+      flex: 1; padding: 6px; background: #12121a; color: #8888a0;
+      border: 1px solid #2a2a3a; border-radius: 8px; font-size: 13px; text-align: center;
+    }
+    .lang-btn.active { border-color: #6c63ff; color: #6c63ff; }
+    .verify-section { margin-bottom: 12px; }
+
+    /* --- Chat mockup --- */
+    .chat-bg {
+      width: 700px;
+      background: #1a1a26;
+      border-radius: 16px;
+      border: 1px solid #2a2a3a;
+      padding: 24px;
+      margin-right: 40px;
+    }
+    .chat-header {
+      font-size: 16px; font-weight: 600; color: #e0e0e8;
+      padding-bottom: 16px; border-bottom: 1px solid #2a2a3a; margin-bottom: 16px;
+    }
+    .msg {
+      max-width: 80%; padding: 10px 14px; border-radius: 12px;
+      font-size: 14px; margin-bottom: 10px; line-height: 1.5;
+    }
+    .msg.them {
+      background: #12121a; color: #e0e0e8; border: 1px solid #2a2a3a;
+      margin-right: auto;
+    }
+    .msg.you {
+      background: #6c63ff; color: white;
+      margin-left: auto;
+    }
+    .msg.encrypted {
+      background: #12121a; color: #8888a0; border: 1px solid #2a2a3a;
+      font-family: monospace; font-size: 11px; word-break: break-all;
+      margin-right: auto;
+    }
+    .veil-annotation {
+      font-size: 12px; color: #2ed573; margin-top: 6px;
+      padding-top: 6px; border-top: 1px solid #2a2a3a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .veil-tag { color: #6c63ff; font-size: 11px; font-family: monospace; }
+    .chat-flex { display: flex; flex-direction: column; }
+    .msg-row { display: flex; }
+    .msg-row.right { justify-content: flex-end; }
+
+    /* --- Decorative --- */
+    .hero-text {
+      position: absolute;
+      top: 60px;
+      left: 0; right: 0;
+      text-align: center;
+    }
+    .hero-text h2 {
+      font-size: 28px; font-weight: 700; color: #e0e0e8; margin-bottom: 8px;
+    }
+    .hero-text p { font-size: 16px; color: #8888a0; }
+    .hero-text em { font-style: normal; color: #6c63ff; }
+
+    .scene {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 40px;
+    }
+
+    .badge {
+      display: inline-block; padding: 3px 10px; font-size: 11px;
+      font-weight: 600; letter-spacing: 1px; color: #6c63ff;
+      border: 1px solid #6c63ff; border-radius: 14px; margin-bottom: 12px;
+    }
+
+    /* Screenshot 3: features */
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      max-width: 900px;
+    }
+    .feature-card {
+      background: #12121a;
+      border: 1px solid #2a2a3a;
+      border-radius: 12px;
+      padding: 28px 20px;
+      text-align: center;
+    }
+    .feature-card .icon { font-size: 28px; margin-bottom: 12px; display: block; }
+    .feature-card h3 { font-size: 15px; font-weight: 600; color: #e0e0e8; margin-bottom: 8px; }
+    .feature-card p { font-size: 13px; color: #8888a0; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<!-- Screenshot 1: Connected session with chat -->
+<div class="screenshot" id="ss1">
+  <div class="hero-text">
+    <h2>End-to-end encryption for <em>any</em> web messenger</h2>
+    <p>Messages are encrypted before they leave your browser</p>
+  </div>
+  <div class="scene">
+    <div class="chat-bg">
+      <div class="chat-header">Chat with Alice</div>
+      <div class="chat-flex">
+        <div class="msg-row">
+          <div class="msg encrypted">
+            [VL:E]a2V5LWV4Y2hhbmdlLXYxLjA...Rk9MQ0s=[/VL]
+            <div class="veil-annotation">--- VEIL ---<br>Hey, are we still meeting tomorrow?</div>
+          </div>
+        </div>
+        <div class="msg-row right">
+          <div class="msg you">Yes! Let's meet at 3pm at the usual place</div>
+        </div>
+        <div class="msg-row">
+          <div class="msg encrypted">
+            [VL:E]bXNnLXYxLjAtYWVzLTI1Ni...Q0hFQ0s=[/VL]
+            <div class="veil-annotation">--- VEIL ---<br>Perfect, see you there. Bring the documents.</div>
+          </div>
+        </div>
+        <div class="msg-row right">
+          <div class="msg you">Will do. Stay safe!</div>
+        </div>
+      </div>
+    </div>
+    <div class="popup">
+      <h1>VEIL</h1>
+      <div class="hostname">web.whatsapp.com</div>
+      <div class="status-row">
+        <div class="dot established"></div>
+        <span>Connected</span>
+      </div>
+      <div class="fingerprint">A7F2 B3C1</div>
+      <div class="fp-label">Compare this with your peer</div>
+      <div class="verify-section">
+        <div class="verify-row">
+          <span class="verify-label">In-band</span>
+          <span class="verify-status verified">Verified</span>
+        </div>
+        <div class="verify-row">
+          <span class="verify-label">Server</span>
+          <span class="verify-status verified">Verified</span>
+        </div>
+      </div>
+      <button class="btn btn-danger">End Session</button>
+      <button class="btn btn-secondary">Re-configure input</button>
+      <div class="lang-row">
+        <button class="lang-btn active">English</button>
+        <button class="lang-btn">فارسی</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot 2: Starting a session -->
+<div class="screenshot" id="ss2">
+  <div class="hero-text">
+    <h2>Start a secure session in <em>one click</em></h2>
+    <p>Automatic key exchange — no codes to copy or paste</p>
+  </div>
+  <div class="scene">
+    <div class="chat-bg">
+      <div class="chat-header">Chat with Bob</div>
+      <div class="chat-flex">
+        <div class="msg-row right">
+          <div class="msg you" style="font-family: monospace; font-size: 11px; background: #4a44cc;">
+            [VL:I]eyJwdWJsaWNLZXkiOiJCRTR...ZXJpZnk=[/VL]
+          </div>
+        </div>
+        <div class="msg-row">
+          <div class="msg them">
+            <span class="veil-tag">[VL:R]</span> <span style="font-family:monospace;font-size:11px;color:#8888a0">eyJwdWJsaWNLZXkiOiJCQ0Y...cmVwbHk=[/VL]</span>
+            <div class="veil-annotation">--- VEIL ---<br>Handshake reply received</div>
+          </div>
+        </div>
+        <div style="text-align:center;color:#2ed573;font-size:13px;padding:12px 0;">
+          Session established — messages are now encrypted
+        </div>
+        <div class="msg-row right">
+          <div class="msg you">This message is encrypted end-to-end</div>
+        </div>
+      </div>
+    </div>
+    <div class="popup">
+      <h1>VEIL</h1>
+      <div class="hostname">messenger.com</div>
+      <div class="status-row">
+        <div class="dot invited"></div>
+        <span>Waiting for response...</span>
+      </div>
+      <button class="btn btn-danger">End Session</button>
+      <div class="lang-row">
+        <button class="lang-btn active">English</button>
+        <button class="lang-btn">فارسی</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screenshot 3: Security features -->
+<div class="screenshot" id="ss3">
+  <div class="hero-text" style="top: 50px;">
+    <div class="badge">SECURITY</div>
+    <h2>Built on modern cryptography</h2>
+    <p>No accounts, no data collection, keys exist only in RAM</p>
+  </div>
+  <div class="features" style="margin-top: 100px;">
+    <div class="feature-card">
+      <span class="icon">&#x1F510;</span>
+      <h3>AES-256-GCM</h3>
+      <p>Every message encrypted with authenticated encryption. Tamper-proof by design.</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">&#x1F504;</span>
+      <h3>Fresh keys per session</h3>
+      <p>ECDH P-256 key pairs are generated for each session. No key reuse, ever.</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">&#x1F50D;</span>
+      <h3>3-channel verification</h3>
+      <p>In-band, server, and out-of-band fingerprint checks to detect interception.</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">&#x1F4AD;</span>
+      <h3>RAM only</h3>
+      <p>Keys live in chrome.storage.session — memory only. Close the browser, they're gone.</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">&#x1F6AB;</span>
+      <h3>Zero data collection</h3>
+      <p>No accounts, no analytics, no telemetry. Veil knows nothing about you.</p>
+    </div>
+    <div class="feature-card">
+      <span class="icon">&#x1F513;</span>
+      <h3>Open source</h3>
+      <p>Every line of code is public on GitHub. Audit it, fork it, build on it.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

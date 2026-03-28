@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#12121a"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b83ff"/>
+      <stop offset="100%" stop-color="#6c63ff"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9b93ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#6c63ff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- Subtle border -->
+  <rect x="1" y="1" width="126" height="126" rx="27" fill="none" stroke="#2a2a3a" stroke-width="1.5"/>
+
+  <!-- Shield shape -->
+  <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z"
+        fill="url(#accent)" opacity="0.12"/>
+  <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z"
+        fill="none" stroke="url(#accent)" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- V letterform inside shield -->
+  <path d="M46 46 L64 82 L82 46" fill="none" stroke="url(#accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Small dot at bottom of V for style -->
+  <circle cx="64" cy="90" r="3" fill="#6c63ff"/>
+</svg>
