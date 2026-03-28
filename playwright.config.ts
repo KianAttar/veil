@@ -5,6 +5,7 @@ const extensionPath = path.resolve(__dirname);
 
 export default defineConfig({
   testDir: './test',
+  testMatch: '*.spec.ts',
   timeout: 60000,
   retries: 0,
   use: {
