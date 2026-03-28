@@ -7,4 +7,4 @@ declare const __VEIL_DEV__: boolean;
 
 export const VERIFY_SERVER_URL = __VEIL_DEV__
   ? 'http://localhost:8787'
-  : 'https://veil-verify.YOUR_SUBDOMAIN.workers.dev'; // TODO: update after `wrangler deploy`
+  : 'https://verify.veil.kiancode.dev';
