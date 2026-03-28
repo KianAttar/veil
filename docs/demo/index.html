@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veil Demo — Try End-to-End Encryption</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0f; --bg-surface: #12121a; --bg-elevated: #1a1a26;
+      --border: #2a2a3a; --text: #e0e0e8; --text-dim: #8888a0;
+      --accent: #6c63ff; --accent-hover: #7b73ff; --success: #2ed573;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 48px; max-width: 600px; text-align: center;
+    }
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    h1 em { font-style: normal; color: var(--accent); }
+    .subtitle { color: var(--text-dim); font-size: 15px; margin-bottom: 32px; line-height: 1.6; }
+    .steps {
+      text-align: left; margin-bottom: 32px; padding: 20px 24px;
+      background: var(--bg-elevated); border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .steps h3 { font-size: 14px; color: var(--accent); margin-bottom: 12px; letter-spacing: 1px; }
+    .steps ol { padding-left: 20px; }
+    .steps li { color: var(--text-dim); font-size: 14px; margin-bottom: 8px; line-height: 1.5; }
+    .steps li strong { color: var(--text); }
+    .buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 14px 32px; border: none; border-radius: 8px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: all 0.15s;
+    }
+    .btn-bob { background: #4a9eff; color: white; }
+    .btn-bob:hover { background: #5aabff; box-shadow: 0 0 20px rgba(74,158,255,0.2); }
+    .btn-john { background: #ff6b6b; color: white; }
+    .btn-john:hover { background: #ff7b7b; box-shadow: 0 0 20px rgba(255,107,107,0.2); }
+    .hint {
+      margin-top: 24px; font-size: 12px; color: var(--text-dim);
+      padding: 12px; background: var(--bg-elevated); border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .back { margin-top: 24px; }
+    .back a { color: var(--text-dim); font-size: 13px; text-decoration: none; }
+    .back a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Try <em>Veil</em> Encryption</h1>
+    <p class="subtitle">
+      See how end-to-end encryption works — two users, two tabs, real cryptography.
+      No extension needed.
+    </p>
+
+    <div class="steps">
+      <h3>HOW THIS DEMO WORKS</h3>
+      <ol>
+        <li>Open <strong>Bob</strong> and <strong>John</strong> in two separate tabs</li>
+        <li>Click <strong>"Start Session"</strong> in one tab — the other will auto-connect</li>
+        <li>Send messages — they're encrypted with AES-256-GCM in real time</li>
+        <li><strong>Refresh a tab</strong> — the keys are gone. The encrypted messages remain, but you can't read them anymore</li>
+        <li>This is exactly what the messenger's server sees: <strong>unreadable ciphertext</strong></li>
+      </ol>
+    </div>
+
+    <div class="buttons">
+      <a href="bob/" class="btn btn-bob" target="_blank">Open as Bob</a>
+      <a href="john/" class="btn btn-john" target="_blank">Open as John</a>
+    </div>
+
+    <div class="hint">
+      Open both links in separate tabs, then follow the guided steps.
+    </div>
+  </div>
+
+  <div class="back">
+    <a href="/">&larr; Back to veil.kiancode.dev</a>
+  </div>
+</body>
+</html>

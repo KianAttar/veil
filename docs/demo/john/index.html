@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veil Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0f; --bg-surface: #12121a; --bg-elevated: #1a1a26;
+      --border: #2a2a3a; --text: #e0e0e8; --text-dim: #8888a0;
+      --accent: #6c63ff; --success: #2ed573; --danger: #ff4757; --warning: #ffa502;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      height: 100vh; display: flex; flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header {
+      padding: 12px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg-surface);
+    }
+    .header .logo { font-size: 14px; font-weight: 700; letter-spacing: 2px; color: var(--text-dim); }
+    .header .user-badge {
+      padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    }
+    .user-badge.bob { background: rgba(74,158,255,0.15); color: #4a9eff; }
+    .user-badge.john { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+    .header .status {
+      margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .status-dot.disconnected { background: var(--text-dim); }
+    .status-dot.waiting { background: var(--warning); }
+    .status-dot.connected { background: var(--success); }
+    .status-dot.expired { background: var(--danger); }
+
+    /* Guide banner */
+    .guide {
+      padding: 12px 20px; background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px; color: var(--text-dim); line-height: 1.5;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .guide-step {
+      background: var(--accent); color: white; width: 22px; height: 22px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .guide em { font-style: normal; color: var(--accent); }
+    .guide strong { color: var(--text); }
+
+    /* Messages area */
+    .messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg {
+      max-width: 75%; padding: 10px 14px; border-radius: 12px;
+      font-size: 14px; line-height: 1.5; position: relative;
+    }
+    .msg.mine {
+      align-self: flex-end; border-bottom-right-radius: 4px;
+    }
+    .msg.mine.bob { background: #4a9eff; color: white; }
+    .msg.mine.john { background: #ff6b6b; color: white; }
+    .msg.theirs {
+      align-self: flex-start; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-bottom-left-radius: 4px;
+    }
+    .msg.system {
+      align-self: center; background: var(--bg-elevated);
+      border: 1px solid var(--border); font-size: 12px;
+      color: var(--text-dim); padding: 6px 14px; border-radius: 20px;
+    }
+    .msg.system.success { border-color: rgba(46,213,115,0.3); color: var(--success); }
+    .msg.system.warning { border-color: rgba(255,71,87,0.3); color: var(--danger); }
+
+    /* Encrypted payload display */
+    .encrypted-payload {
+      font-family: monospace; font-size: 10px; color: var(--text-dim);
+      word-break: break-all; opacity: 0.6; margin-top: 4px;
+      padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .msg.theirs .encrypted-payload { border-top-color: var(--border); }
+    .decrypted-text { }
+    .cannot-decrypt {
+      color: var(--danger); font-style: italic; font-size: 13px;
+    }
+
+    /* Fingerprint */
+    .fingerprint-bar {
+      padding: 8px 20px; background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px; font-size: 12px;
+    }
+    .fingerprint-bar .label { color: var(--text-dim); }
+    .fingerprint-bar .fp {
+      font-family: monospace; font-size: 14px; font-weight: 700;
+      color: var(--accent); letter-spacing: 2px;
+    }
+    .hidden { display: none !important; }
+
+    /* Input area */
+    .input-area {
+      padding: 12px 20px; border-top: 1px solid var(--border);
+      background: var(--bg-surface); display: flex; gap: 10px;
+    }
+    .input-area input {
+      flex: 1; padding: 10px 14px; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); font-size: 14px; outline: none;
+    }
+    .input-area input:focus { border-color: var(--accent); }
+    .input-area input::placeholder { color: var(--text-dim); }
+    .input-area input:disabled { opacity: 0.4; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-send { background: var(--accent); color: white; }
+    .btn-send:hover:not(:disabled) { background: #7b73ff; }
+    .btn-start { background: var(--success); color: white; }
+    .btn-start:hover:not(:disabled) { background: #3ee083; }
+    .btn-clear {
+      background: transparent; color: var(--text-dim);
+      border: 1px solid var(--border); font-size: 11px; padding: 6px 12px;
+    }
+    .btn-clear:hover { border-color: var(--danger); color: var(--danger); }
+    .btn-end {
+      background: transparent; color: var(--danger);
+      border: 1px solid var(--danger); font-size: 11px; padding: 6px 12px;
+    }
+    .btn-end:hover { background: rgba(255,71,87,0.1); }
+
+    /* Per-user background tint */
+    body.is-bob { background: #080a10; }
+    body.is-bob .header { background: #0c1018; }
+    body.is-bob .input-area { background: #0c1018; }
+    body.is-bob .actions { background: #0c1018; }
+    body.is-john { background: #100a0a; }
+    body.is-john .header { background: #180c0c; }
+    body.is-john .input-area { background: #180c0c; }
+    body.is-john .actions { background: #180c0c; }
+
+    /* Actions row */
+    .actions {
+      padding: 8px 20px; display: flex; gap: 8px; align-items: center;
+      border-top: 1px solid var(--border); background: var(--bg-surface);
+    }
+    .actions .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="logo">VEIL DEMO</span>
+    <span class="user-badge" id="userBadge"></span>
+    <div class="status">
+      <div class="status-dot disconnected" id="statusDot"></div>
+      <span id="statusLabel">No session</span>
+    </div>
+  </div>
+
+  <div class="guide" id="guide">
+    <div class="guide-step" id="guideStep">1</div>
+    <span id="guideText"></span>
+  </div>
+
+  <div class="fingerprint-bar hidden" id="fingerprintBar">
+    <span class="label">Session fingerprint:</span>
+    <span class="fp" id="fingerprint"></span>
+  </div>
+
+  <div class="messages" id="messages"></div>
+
+  <div class="actions" id="actionsBar">
+    <button class="btn btn-start" id="btnStart">Start Session</button>
+    <button class="btn btn-end hidden" id="btnEnd">End Session</button>
+    <span class="spacer"></span>
+    <button class="btn btn-clear" id="btnClear">Clear Chat</button>
+  </div>
+
+  <div class="input-area">
+    <input type="text" id="msgInput" placeholder="Type a message..." disabled>
+    <button class="btn btn-send" id="btnSend" disabled>Send</button>
+  </div>
+
+<script>
+(function() {
+  // --- Detect user from URL ---
+  const path = location.pathname.toLowerCase();
+  const ME = path.includes('/bob') ? 'bob' : path.includes('/john') ? 'john' : null;
+  if (!ME) { document.body.innerHTML = '<p style="padding:40px;color:#e0e0e8">Invalid user. Go to <a href="../" style="color:#6c63ff">/demo/</a></p>'; return; }
+  const PEER = ME === 'bob' ? 'john' : 'bob';
+  const STORAGE_KEY = 'veil_demo_chat';
+
+  // --- DOM refs ---
+  const $ = id => document.getElementById(id);
+  const userBadge = $('userBadge');
+  const statusDot = $('statusDot');
+  const statusLabel = $('statusLabel');
+  const guide = $('guide');
+  const guideStep = $('guideStep');
+  const guideText = $('guideText');
+  const fingerprintBar = $('fingerprintBar');
+  const fpEl = $('fingerprint');
+  const messagesEl = $('messages');
+  const msgInput = $('msgInput');
+  const btnSend = $('btnSend');
+  const btnStart = $('btnStart');
+  const btnEnd = $('btnEnd');
+  const btnClear = $('btnClear');
+
+  userBadge.textContent = ME.charAt(0).toUpperCase() + ME.slice(1);
+  userBadge.classList.add(ME);
+  document.body.classList.add('is-' + ME);
+  document.title = `Veil Demo — ${ME.charAt(0).toUpperCase() + ME.slice(1)}`;
+
+  // --- Crypto state ---
+  let myKeyPair = null;
+  let sharedKey = null;
+  let sessionFingerprint = null;
+  let state = 'idle'; // idle | invited | established | expired
+
+  // --- BroadcastChannel for cross-tab communication ---
+  const channel = new BroadcastChannel('veil-demo');
+
+  // --- Helpers ---
+  function ab2b64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+  function b642ab(b64) {
+    const bin = atob(b64);
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  }
+
+  async function generateKeyPair() {
+    return crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey']);
+  }
+
+  async function exportPublicKey(key) {
+    const raw = await crypto.subtle.exportKey('raw', key);
+    return ab2b64(raw);
+  }
+
+  async function importPublicKey(b64) {
+    const raw = b642ab(b64);
+    return crypto.subtle.importKey('raw', raw, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
+  }
+
+  async function deriveKey(privateKey, publicKey) {
+    return crypto.subtle.deriveKey(
+      { name: 'ECDH', public: publicKey },
+      privateKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt']
+    );
+  }
+
+  async function computeFingerprint(pubA, pubB) {
+    const combined = [pubA, pubB].sort().join(':');
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(combined));
+    const hex = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    return hex.slice(0, 4).toUpperCase() + ' ' + hex.slice(4, 8).toUpperCase();
+  }
+
+  async function encrypt(text) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(text);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sharedKey, encoded);
+    return ab2b64(iv) + '.' + ab2b64(ct);
+  }
+
+  async function decrypt(payload) {
+    const [ivB64, ctB64] = payload.split('.');
+    const iv = b642ab(ivB64);
+    const ct = b642ab(ctB64);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(iv) }, sharedKey, ct);
+    return new TextDecoder().decode(pt);
+  }
+
+  // --- Chat storage (simulates "the server") ---
+  function loadMessages() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+  }
+  function saveMessages(msgs) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs));
+  }
+  function addMessage(msg) {
+    const msgs = loadMessages();
+    msgs.push(msg);
+    saveMessages(msgs);
+  }
+
+  // --- Render ---
+  function setStatus(s, label) {
+    state = s;
+    statusDot.className = 'status-dot ' + s;
+    statusLabel.textContent = label;
+  }
+
+  function updateGuide(step, text) {
+    guideStep.textContent = step;
+    guideText.innerHTML = text;
+    guide.classList.remove('hidden');
+  }
+
+  function hideGuide() {
+    guide.classList.add('hidden');
+  }
+
+  async function renderMessages() {
+    const msgs = loadMessages();
+    messagesEl.innerHTML = '';
+
+    for (const msg of msgs) {
+      const div = document.createElement('div');
+      div.className = 'msg';
+
+      if (msg.type === 'system') {
+        div.classList.add('system');
+        if (msg.success) div.classList.add('success');
+        if (msg.warning) div.classList.add('warning');
+        div.textContent = msg.text;
+      } else {
+        const isMine = msg.from === ME;
+        div.classList.add(isMine ? 'mine' : 'theirs');
+        if (isMine) div.classList.add(ME);
+
+        if (msg.encrypted) {
+          // Try to decrypt
+          if (sharedKey) {
+            try {
+              const plaintext = await decrypt(msg.encrypted);
+              const ptSpan = document.createElement('div');
+              ptSpan.className = 'decrypted-text';
+              ptSpan.textContent = plaintext;
+              div.appendChild(ptSpan);
+            } catch {
+              const errSpan = document.createElement('div');
+              errSpan.className = 'cannot-decrypt';
+              errSpan.textContent = 'Cannot decrypt (wrong key or corrupted)';
+              div.appendChild(errSpan);
+            }
+          } else {
+            const errSpan = document.createElement('div');
+            errSpan.className = 'cannot-decrypt';
+            errSpan.textContent = 'Cannot decrypt (no session key)';
+            div.appendChild(errSpan);
+          }
+          // Always show encrypted payload
+          const epDiv = document.createElement('div');
+          epDiv.className = 'encrypted-payload';
+          epDiv.textContent = msg.encrypted.slice(0, 60) + '...';
+          div.appendChild(epDiv);
+        } else {
+          div.textContent = msg.text;
+        }
+      }
+
+      messagesEl.appendChild(div);
+    }
+
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function enableInput(enabled) {
+    msgInput.disabled = !enabled;
+    btnSend.disabled = !enabled;
+    if (enabled) msgInput.focus();
+  }
+
+  // --- Session logic ---
+  async function startSession() {
+    myKeyPair = await generateKeyPair();
+    const pubB64 = await exportPublicKey(myKeyPair.publicKey);
+
+    // Store public key in sessionStorage (lost on refresh!)
+    sessionStorage.setItem('veil_demo_pub', pubB64);
+
+    setStatus('waiting', 'Waiting for ' + PEER + '...');
+    btnStart.classList.add('hidden');
+    btnEnd.classList.remove('hidden');
+    updateGuide('2', `Key pair generated. Waiting for <strong>${PEER}</strong> to start their session... <em>Open the other tab!</em>`);
+
+    // Broadcast our public key
+    channel.postMessage({ type: 'hello', from: ME, publicKey: pubB64 });
+
+    addMessage({ type: 'system', text: ME + ' started a session', success: true });
+    renderMessages();
+  }
+
+  async function completeHandshake(theirPubB64) {
+    const theirPub = await importPublicKey(theirPubB64);
+    sharedKey = await deriveKey(myKeyPair.privateKey, theirPub);
+
+    const myPubB64 = await exportPublicKey(myKeyPair.publicKey);
+    sessionFingerprint = await computeFingerprint(myPubB64, theirPubB64);
+
+    setStatus('connected', 'Encrypted session active');
+    fingerprintBar.classList.remove('hidden');
+    fpEl.textContent = sessionFingerprint;
+    btnStart.classList.add('hidden');
+    btnEnd.classList.remove('hidden');
+    enableInput(true);
+
+    updateGuide('3', `Session established! Send an encrypted message. Then try <strong>refreshing this tab</strong> to see what happens.`);
+
+    addMessage({ type: 'system', text: 'Encrypted session established. Fingerprint: ' + sessionFingerprint, success: true });
+    renderMessages();
+  }
+
+  function endSession() {
+    sharedKey = null;
+    myKeyPair = null;
+    sessionFingerprint = null;
+    sessionStorage.clear();
+
+    setStatus('disconnected', 'No session');
+    fingerprintBar.classList.add('hidden');
+    btnStart.classList.remove('hidden');
+    btnEnd.classList.add('hidden');
+    enableInput(false);
+
+    channel.postMessage({ type: 'end', from: ME });
+    addMessage({ type: 'system', text: ME + ' ended the session. Keys wiped.', warning: true });
+    renderMessages();
+    updateGuide('1', `Session ended. Keys are gone. Click <strong>Start Session</strong> to begin again.`);
+  }
+
+  async function sendMessage() {
+    const text = msgInput.value.trim();
+    if (!text || !sharedKey) return;
+
+    const encrypted = await encrypt(text);
+    const msg = { from: ME, encrypted, ts: Date.now() };
+    addMessage(msg);
+    channel.postMessage({ type: 'message', msg });
+    msgInput.value = '';
+    renderMessages();
+  }
+
+  // --- BroadcastChannel handlers ---
+  channel.onmessage = async (e) => {
+    const data = e.data;
+
+    if (data.type === 'hello' && data.from === PEER) {
+      if (!myKeyPair) {
+        // Auto-start session in response
+        myKeyPair = await generateKeyPair();
+        const pubB64 = await exportPublicKey(myKeyPair.publicKey);
+        sessionStorage.setItem('veil_demo_pub', pubB64);
+        // Reply with our key
+        channel.postMessage({ type: 'hello', from: ME, publicKey: pubB64 });
+      }
+      // Complete handshake with their key
+      await completeHandshake(data.publicKey);
+    }
+
+    if (data.type === 'message' && data.msg.from === PEER) {
+      addMessage(data.msg);
+      renderMessages();
+    }
+
+    if (data.type === 'end' && data.from === PEER) {
+      sharedKey = null;
+      myKeyPair = null;
+      sessionFingerprint = null;
+      sessionStorage.clear();
+      setStatus('disconnected', 'No session');
+      fingerprintBar.classList.add('hidden');
+      btnStart.classList.remove('hidden');
+      btnEnd.classList.add('hidden');
+      enableInput(false);
+      addMessage({ type: 'system', text: PEER + ' ended the session. Keys wiped.', warning: true });
+      renderMessages();
+      updateGuide('1', `Session ended by ${PEER}. Click <strong>Start Session</strong> to begin again.`);
+    }
+
+    if (data.type === 'clear') {
+      renderMessages();
+    }
+  };
+
+  // --- Event listeners ---
+  btnStart.addEventListener('click', startSession);
+  btnEnd.addEventListener('click', endSession);
+  btnSend.addEventListener('click', sendMessage);
+  msgInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+  btnClear.addEventListener('click', () => {
+    saveMessages([]);
+    channel.postMessage({ type: 'clear' });
+    renderMessages();
+  });
+
+  // --- Init ---
+  function init() {
+    const msgs = loadMessages();
+    const hasEncrypted = msgs.some(m => m.encrypted);
+
+    if (hasEncrypted && !sharedKey) {
+      // Page was refreshed — keys are gone
+      setStatus('expired', 'Keys lost (page refreshed)');
+      updateGuide('!', `<strong>Keys are gone!</strong> You refreshed the page, so the encryption keys were erased from memory. The messages below are what the messenger's server has — <em>unreadable ciphertext</em>. Click <strong>Start Session</strong> to create new keys.`);
+      btnStart.classList.remove('hidden');
+    } else {
+      updateGuide('1', `You are <strong>${ME}</strong>. Open <a href="../${PEER}/" target="_blank" style="color:#6c63ff">${PEER}</a> in another tab, then click <strong>Start Session</strong>.`);
+    }
+
+    renderMessages();
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
