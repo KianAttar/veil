@@ -1,18 +1,79 @@
-// Veil — Ciphertext disguise layer (v2: visible bracket tags)
+// Veil — Ciphertext disguise layer (v3: invite/reply protocol with nonce + timestamp)
 // Tags are reliable across all messengers and trivial to find in the DOM.
 
-import type { HandshakeData } from './types';
+import type { HandshakePayload } from './types';
 
 // Tag format: [VL:X]payload[/VL]
-// X = E (encrypted message), H (handshake), V (verify fingerprint)
-const TAG_E_OPEN  = '[VL:E]';
-const TAG_H_OPEN  = '[VL:H]';
-const TAG_V_OPEN  = '[VL:V]';
-const TAG_CLOSE   = '[/VL]';
+// I = invite (handshake initiation), R = reply (handshake response)
+// E = encrypted message, V = verify fingerprint, X = end session
+const TAG_I_OPEN = '[VL:I]';
+const TAG_R_OPEN = '[VL:R]';
+const TAG_E_OPEN = '[VL:E]';
+const TAG_V_OPEN = '[VL:V]';
+const TAG_X_OPEN = '[VL:X]';
+const TAG_CLOSE  = '[/VL]';
 
 // Detects any Veil message without knowing the type
 function isAnyVeil(text: string): boolean {
   return text.includes('[VL:');
+}
+
+// --- Shared handshake payload parsing ---
+// Payload format: pubkey.sig.nonce.timestamp (4 dot-separated fields)
+
+function parseHandshakePayload(payload: string): HandshakePayload | null {
+  const parts = payload.split('.');
+  if (parts.length !== 4) return null;
+  const timestamp = parseInt(parts[3], 10);
+  if (isNaN(timestamp)) return null;
+  return {
+    publicKey: parts[0],
+    signature: parts[1],
+    nonce: parts[2],
+    timestamp,
+  };
+}
+
+function formatHandshakePayload(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${publicKey}.${signature}.${nonce}.${timestamp}`;
+}
+
+// --- Invite ---
+
+function wrapInvite(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${TAG_I_OPEN}${formatHandshakePayload(publicKey, signature, nonce, timestamp)}${TAG_CLOSE}`;
+}
+
+function unwrapInvite(text: string): HandshakePayload | null {
+  const start = text.indexOf(TAG_I_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_I_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return parseHandshakePayload(text.slice(payloadStart, end));
+}
+
+function isInvite(text: string): boolean {
+  return text.includes(TAG_I_OPEN);
+}
+
+// --- Reply ---
+
+function wrapReply(publicKey: string, signature: string, nonce: string, timestamp: number): string {
+  return `${TAG_R_OPEN}${formatHandshakePayload(publicKey, signature, nonce, timestamp)}${TAG_CLOSE}`;
+}
+
+function unwrapReply(text: string): HandshakePayload | null {
+  const start = text.indexOf(TAG_R_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_R_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return parseHandshakePayload(text.slice(payloadStart, end));
+}
+
+function isReply(text: string): boolean {
+  return text.includes(TAG_R_OPEN);
 }
 
 // --- Encrypted message ---
@@ -34,28 +95,6 @@ function isVeilMessage(text: string): boolean {
   return text.includes(TAG_E_OPEN);
 }
 
-// --- Handshake ---
-
-function wrapHandshake(publicKeyBase64: string, signatureBase64: string): string {
-  return `${TAG_H_OPEN}${publicKeyBase64}.${signatureBase64}${TAG_CLOSE}`;
-}
-
-function unwrapHandshake(text: string): HandshakeData | null {
-  const start = text.indexOf(TAG_H_OPEN);
-  if (start === -1) return null;
-  const payloadStart = start + TAG_H_OPEN.length;
-  const end = text.indexOf(TAG_CLOSE, payloadStart);
-  if (end === -1) return null;
-  const payload = text.slice(payloadStart, end);
-  const dot = payload.indexOf('.');
-  if (dot === -1) return null;
-  return { publicKey: payload.slice(0, dot), signature: payload.slice(dot + 1) };
-}
-
-function isHandshake(text: string): boolean {
-  return text.includes(TAG_H_OPEN);
-}
-
 // --- Fingerprint verification ---
 
 function wrapVerify(encryptedFingerprint: string): string {
@@ -75,19 +114,46 @@ function isVerifyMessage(text: string): boolean {
   return text.includes(TAG_V_OPEN);
 }
 
+// --- End session ---
+
+function wrapEnd(encryptedTimestamp: string): string {
+  return `${TAG_X_OPEN}${encryptedTimestamp}${TAG_CLOSE}`;
+}
+
+function unwrapEnd(text: string): string | null {
+  const start = text.indexOf(TAG_X_OPEN);
+  if (start === -1) return null;
+  const payloadStart = start + TAG_X_OPEN.length;
+  const end = text.indexOf(TAG_CLOSE, payloadStart);
+  if (end === -1) return null;
+  return text.slice(payloadStart, end);
+}
+
+function isEndMessage(text: string): boolean {
+  return text.includes(TAG_X_OPEN);
+}
+
 export const VeilDisguise = {
   isAnyVeil,
+  wrapInvite,
+  unwrapInvite,
+  isInvite,
+  wrapReply,
+  unwrapReply,
+  isReply,
   wrapMessage,
   unwrapMessage,
   isVeilMessage,
-  wrapHandshake,
-  unwrapHandshake,
-  isHandshake,
   wrapVerify,
   unwrapVerify,
   isVerifyMessage,
+  wrapEnd,
+  unwrapEnd,
+  isEndMessage,
+  TAG_I_OPEN,
+  TAG_R_OPEN,
   TAG_E_OPEN,
-  TAG_H_OPEN,
   TAG_V_OPEN,
+  TAG_X_OPEN,
   TAG_CLOSE,
 };

@@ -99,10 +99,12 @@ async function decrypt(aesKey: CryptoKey, base64Payload: string): Promise<string
 }
 
 async function computeFingerprint(
-  myPublicKeyBase64: string,
-  theirPublicKeyBase64: string,
+  publicKeyA: string,
+  publicKeyB: string,
 ): Promise<string> {
-  const combined = myPublicKeyBase64 + ':' + theirPublicKeyBase64;
+  // Sort lexicographically so both sides compute the same fingerprint
+  const [first, second] = [publicKeyA, publicKeyB].sort();
+  const combined = first + ':' + second;
   const encoded = new TextEncoder().encode(combined);
   const hash = await crypto.subtle.digest('SHA-256', encoded);
   const bytes = new Uint8Array(hash);

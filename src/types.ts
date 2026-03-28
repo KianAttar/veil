@@ -1,19 +1,35 @@
 // Veil — Shared types
 
-export interface HandshakeData {
+// --- Handshake protocol ---
+
+export interface HandshakePayload {
   publicKey: string;
   signature: string;
+  nonce: string;
+  timestamp: number;
 }
+
+// --- DOM scanner results ---
 
 export interface ScannedEncrypted {
   type: 'encrypted';
   payload: string;
 }
 
-export interface ScannedHandshake {
-  type: 'handshake';
+export interface ScannedInvite {
+  type: 'invite';
   publicKey: string;
   signature: string;
+  nonce: string;
+  timestamp: number;
+}
+
+export interface ScannedReply {
+  type: 'reply';
+  publicKey: string;
+  signature: string;
+  nonce: string;
+  timestamp: number;
 }
 
 export interface ScannedVerify {
@@ -21,7 +37,9 @@ export interface ScannedVerify {
   payload: string;
 }
 
-export type ScannedItem = ScannedEncrypted | ScannedHandshake | ScannedVerify;
+export type ScannedItem = ScannedEncrypted | ScannedInvite | ScannedReply | ScannedVerify;
+
+// --- UI ---
 
 export interface ChatMessage {
   sender: 'you' | 'them' | 'system';
@@ -29,16 +47,6 @@ export interface ChatMessage {
 }
 
 export type Language = 'en' | 'fa';
-
-export type PanelId =
-  | 'panelLang'
-  | 'panelNoSession'
-  | 'panelHandshake'
-  | 'panelHandshakeReceived'
-  | 'panelSession'
-  | 'panelSettings'
-  | 'panelCopyFallback'
-  | 'panelOnboarding';
 
 export type OnboardingMode = 'input' | 'send';
 
@@ -56,4 +64,14 @@ export type StringKey =
   | 'paste_invite_prompt' | 'paste_here' | 'connect' | 'status_generating'
   | 'status_connected' | 'status_waiting' | 'how_it_works' | 'how_it_works_desc'
   | 'or_paste_reply' | 'paste_reply_here' | 'submit_reply' | 'paste_incoming'
-  | 'paste_incoming_here' | 'decrypt_incoming';
+  | 'paste_incoming_here' | 'decrypt_incoming'
+  // Popup UI
+  | 'popup_connected' | 'popup_waiting_response' | 'popup_no_session'
+  | 'popup_compare_peer' | 'popup_inband' | 'popup_server'
+  | 'popup_setup_site' | 'popup_reconfigure' | 'popup_setup_needed'
+  // Verification statuses
+  | 'verify_checking' | 'verify_verified' | 'verify_mismatch' | 'verify_unavailable'
+  // Tooltips
+  | 'tip_status' | 'tip_fingerprint' | 'tip_inband' | 'tip_server'
+  | 'tip_start_session' | 'tip_end_session' | 'tip_setup' | 'tip_reconfigure'
+  | 'tip_language';
