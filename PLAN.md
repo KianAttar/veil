@@ -12,9 +12,9 @@ src/types.ts        ← pure type definitions, no logic
 src/crypto.ts       ← no Veil dependencies, just WebCrypto        ✅ DONE
 src/disguise.ts     ← imports types.ts                              ✅ DONE
 src/i18n.ts         ← imports types.ts                              ✅ DONE
-src/background.ts   ← no Veil dependencies, just Chrome APIs
-src/content.ts      ← imports crypto + disguise
-src/sidebar.ts      ← imports crypto + disguise + i18n             (top)
+src/background.ts   ← popup ↔ content routing, Chrome APIs          ✅ DONE
+src/content.ts      ← imports crypto + disguise                      ✅ DONE
+src/popup.ts        ← reads session state, sends commands            ✅ DONE
 ```
 
 ---
@@ -31,41 +31,49 @@ src/sidebar.ts      ← imports crypto + disguise + i18n             (top)
 ---
 
 ### ✅ src/disguise.ts — DONE
-- Redesigned from zero-width Unicode markers to visible bracket tags [VL:E/H/V]...[/VL]
-- wrap/unwrap for messages, handshakes, and verify messages
-- isAnyVeil / isVeilMessage / isHandshake / isVerifyMessage detection logic
-- Dropped fallback parser (visible tags are never stripped by messengers)
+- Redesigned to visible bracket tags: [VL:I] invite, [VL:R] reply, [VL:E] encrypted, [VL:V] verify
+- Nonce + timestamp fields in handshake payloads for symmetric protocol
+- wrap/unwrap for invites, replies, messages, and verify messages
+- isAnyVeil / isVeilMessage / isInvite / isReply / isVerifyMessage detection
 - Tests: `test/disguise.test.ts` — 63 tests, all passing
-- Topics covered: constants, isAnyVeil, wrap/unwrap round-trips, type
-  discrimination, edge cases, integration with VeilCrypto
 
 ### ✅ src/i18n.ts — DONE
 - Simple lookup table — no logic warranting deep testing
 - Exported STRINGS to allow direct key comparison in tests
 - Tests: `test/i18n.test.ts` — 1 test: every English key is present in Persian
 
-### ⬜ src/background.ts — NEXT
-- Chrome action click → TOGGLE_SIDEBAR message routing
-- Message forwarding: sidebar → content script (target: 'content')
-- GET_TAB_HOSTNAME handler
-- Note: Chrome APIs make this harder to unit test — likely light coverage
-  or integration-only
+### ✅ src/background.ts — DONE
+- Simplified from sidebar routing to popup ↔ content routing
+- Routes `target: 'content'` messages from popup to active tab
+- GET_TAB_HOSTNAME handler for popup hostname display
+- Removed: TOGGLE_SIDEBAR, sidebar forwarding
 
-### ⬜ src/content.ts
-- Sidebar DOM injection and layout (push vs overlay)
-- Focus detection (Tier 2 input detection)
-- Onboarding click capture and CSS selector generation
-- Input injection (contenteditable vs value-based inputs)
-- DOM message scanner (TreeWalker + 2s interval)
-- Message passing with sidebar (postMessage)
-- Tests: selector generation, injection logic, scanner detection
+### ✅ src/content.ts — DONE (v2: overlay architecture)
+- Complete rewrite from sidebar-based to overlay-based architecture
+- Symmetric auto-handshake: nonce-based invite/reply correlation
+- Timestamp filtering: ignores handshake messages older than 10 minutes
+- MutationObserver for real-time DOM scanning (replaces 2s polling)
+- DOM text replacement: decrypted messages replace ciphertext inline
+- Send interception: captures Enter key, encrypts, replaces input text
+- "Veil: ON/OFF" toggle badge near chat input
+- Onboarding: input event detection + click capture for send button
+- Toast notifications for status feedback
 
-### ⬜ src/sidebar.ts
-- Session state machine (panelLang → panelNoSession → panelHandshake →
-  panelSession)
-- Full handshake flow: startSession, acceptHandshake, completeHandshakeAsInitiator
-- Fingerprint verification handler
-- Message encrypt/send and decrypt/display
-- Manual decrypt fallback
-- Onboarding flow
-- Tests: panel transitions, handshake state, message rendering, fallback logic
+### ✅ src/popup.ts — DONE
+- Popup panel replacing old sidebar UI
+- Reads session state from chrome.storage.session
+- Buttons: Start Session, End Session, Set up for this site, Re-configure
+- Language toggle (English / Persian)
+- Enforces onboarding-first: Start Session disabled until selectors saved
+
+---
+
+## Architecture Redesign (v2)
+
+### What changed
+- **Sidebar → Popup panel**: Settings/session control moved to Chrome action popup
+- **DOM text replacement**: Decrypted messages shown inline (not in separate UI)
+- **MutationObserver**: Real-time scanning replaces 2-second polling
+- **Auto-handshake**: No manual copy/paste — nonce-based symmetric protocol
+- **Send interception**: Transparent encryption via capture-phase event listeners
+- **sidebar.ts / sidebar.html deleted**: No longer part of the extension
