@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Veil</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-surface: #12121a;
+      --border: #2a2a3a;
+      --text: #e0e0e8;
+      --text-dim: #8888a0;
+      --accent: #6c63ff;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(10, 10, 15, 0.85);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 18px; font-weight: 700; letter-spacing: 3px;
+      color: var(--text); text-decoration: none;
+    }
+    .nav-links a {
+      color: var(--text-dim); text-decoration: none; font-size: 14px;
+      margin-left: 24px;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 100px 24px 80px;
+    }
+
+    h1 {
+      font-size: 28px; font-weight: 700; margin-bottom: 8px;
+    }
+
+    .updated {
+      font-size: 13px; color: var(--text-dim); margin-bottom: 32px;
+    }
+
+    h2 {
+      font-size: 18px; font-weight: 600; margin-top: 32px; margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    p, li {
+      font-size: 15px; color: var(--text-dim); margin-bottom: 12px;
+    }
+
+    ul {
+      list-style: none; padding: 0;
+    }
+    ul li {
+      padding-left: 20px; position: relative;
+    }
+    ul li::before {
+      content: '';
+      position: absolute; left: 0; top: 10px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">VEIL</a>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="https://github.com/KianAttar/veil">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: March 28, 2026</p>
+
+    <p>Veil is a browser extension that provides end-to-end encryption for web-based chat messengers. This policy explains what data Veil handles and how.</p>
+
+    <h2>Data Veil does NOT collect</h2>
+    <ul>
+      <li>No personal information (name, email, phone number, or any identifiers)</li>
+      <li>No message content — all encryption and decryption happens locally in your browser</li>
+      <li>No browsing history or web activity</li>
+      <li>No analytics, telemetry, or usage tracking</li>
+      <li>No cookies or third-party tracking</li>
+    </ul>
+
+    <h2>Data stored locally on your device</h2>
+    <ul>
+      <li>Language preference (English or Persian) — stored in chrome.storage.local</li>
+      <li>Per-site CSS selectors for input detection — stored in chrome.storage.local</li>
+      <li>Session encryption keys — stored in chrome.storage.session (RAM only, never written to disk, erased when the browser closes)</li>
+    </ul>
+
+    <h2>Network requests</h2>
+    <p>Veil makes one optional network request per session to a verification server (verify.veil.kiancode.dev) to detect man-in-the-middle attacks. This request contains only a SHA-256 hash of the session's public key. No user data, message content, or identifying information is transmitted.</p>
+
+    <h2>Third parties</h2>
+    <p>Veil does not share any data with third parties. There are no ads, no analytics services, and no data brokers.</p>
+
+    <h2>Open source</h2>
+    <p>Veil's complete source code is available at <a href="https://github.com/KianAttar/veil">github.com/KianAttar/veil</a>. You can audit exactly what the extension does.</p>
+
+    <h2>Disclaimer</h2>
+    <p>Veil is provided "as is", without warranty of any kind, express or implied. The author is not liable for any damages, data loss, or security incidents arising from the use of this software. Veil is free, open-source software distributed under the <a href="https://github.com/KianAttar/veil/blob/main/LICENSE">MIT License</a>, which contains the full warranty disclaimer.</p>
+    <p>Veil is a security tool, not a guarantee of security. Users are responsible for verifying session fingerprints and understanding the limitations described on the <a href="/">home page</a>.</p>
+
+    <h2>Changes to this policy</h2>
+    <p>If this policy is updated, the changes will be posted on this page with an updated date. Continued use of the extension after changes constitutes acceptance.</p>
+
+    <h2>Contact</h2>
+    <p><a href="mailto:support@kiancode.dev">support@kiancode.dev</a></p>
+  </main>
+
+  <footer>
+    <a href="/">Veil</a> — Open source under the MIT License
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Veil",
+  "version": "2.0.0",
+  "description": "End-to-end encryption layer for any web messenger",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": "icons/icon48.png",
+    "default_title": "Veil",
+    "default_popup": "popup.html"
+  }
+}

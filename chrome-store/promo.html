@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+    .tile {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0a0a0f;
+      margin-bottom: 40px;
+    }
+
+    /* Subtle radial glow behind content */
+    .tile::before {
+      content: '';
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108, 99, 255, 0.12) 0%, transparent 70%);
+      z-index: 0;
+    }
+
+    .tile-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 36px;
+    }
+
+    /* --- Small tile: 440x280 --- */
+    #small { width: 440px; height: 280px; }
+    #small .tile-content { gap: 24px; }
+    #small .icon-area {
+      width: 80px; height: 80px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #small .icon-area svg { width: 80px; height: 80px; }
+    #small .text-area h1 {
+      font-size: 28px; font-weight: 700; color: #e0e0e8;
+      letter-spacing: 4px; margin-bottom: 8px;
+    }
+    #small .text-area p {
+      font-size: 13px; color: #8888a0; line-height: 1.5; max-width: 240px;
+    }
+    #small .text-area p em { font-style: normal; color: #6c63ff; }
+
+    /* --- Marquee tile: 1400x560 --- */
+    #marquee { width: 1400px; height: 560px; }
+    #marquee::before { width: 900px; height: 900px; }
+    #marquee .tile-content { gap: 60px; }
+    #marquee .icon-area {
+      width: 140px; height: 140px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #marquee .icon-area svg { width: 140px; height: 140px; }
+    #marquee .text-area h1 {
+      font-size: 52px; font-weight: 700; color: #e0e0e8;
+      letter-spacing: 6px; margin-bottom: 14px;
+    }
+    #marquee .text-area p {
+      font-size: 20px; color: #8888a0; line-height: 1.5; max-width: 600px;
+    }
+    #marquee .text-area p em { font-style: normal; color: #6c63ff; }
+    #marquee .features {
+      display: flex; gap: 32px; margin-top: 24px;
+    }
+    #marquee .feat {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; color: #8888a0;
+    }
+    #marquee .feat .check {
+      color: #2ed573; font-size: 16px; font-weight: 700;
+    }
+
+    /* Subtle grid lines decoration */
+    .grid-lines {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 0;
+      opacity: 0.04;
+      background-image:
+        linear-gradient(#6c63ff 1px, transparent 1px),
+        linear-gradient(90deg, #6c63ff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Small promo tile: 440x280 -->
+<div class="tile" id="small">
+  <div class="grid-lines"></div>
+  <div class="tile-content">
+    <div class="icon-area">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+        <defs>
+          <linearGradient id="bg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#12121a"/><stop offset="100%" stop-color="#0a0a0f"/></linearGradient>
+          <linearGradient id="ac1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b83ff"/><stop offset="100%" stop-color="#6c63ff"/></linearGradient>
+        </defs>
+        <rect width="128" height="128" rx="28" fill="url(#bg1)"/>
+        <rect x="1" y="1" width="126" height="126" rx="27" fill="none" stroke="#2a2a3a" stroke-width="1.5"/>
+        <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z" fill="url(#ac1)" opacity="0.12"/>
+        <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z" fill="none" stroke="url(#ac1)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M46 46 L64 82 L82 46" fill="none" stroke="url(#ac1)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="64" cy="90" r="3" fill="#6c63ff"/>
+      </svg>
+    </div>
+    <div class="text-area">
+      <h1>VEIL</h1>
+      <p>End-to-end encryption for <em>any</em> web messenger. No accounts, keys in RAM only.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Marquee promo tile: 1400x560 -->
+<div class="tile" id="marquee">
+  <div class="grid-lines"></div>
+  <div class="tile-content">
+    <div class="icon-area">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+        <defs>
+          <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#12121a"/><stop offset="100%" stop-color="#0a0a0f"/></linearGradient>
+          <linearGradient id="ac2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b83ff"/><stop offset="100%" stop-color="#6c63ff"/></linearGradient>
+        </defs>
+        <rect width="128" height="128" rx="28" fill="url(#bg2)"/>
+        <rect x="1" y="1" width="126" height="126" rx="27" fill="none" stroke="#2a2a3a" stroke-width="1.5"/>
+        <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z" fill="url(#ac2)" opacity="0.12"/>
+        <path d="M64 22 L98 38 C98 38 100 72 88 88 C78 101 64 108 64 108 C64 108 50 101 40 88 C28 72 30 38 30 38 Z" fill="none" stroke="url(#ac2)" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M46 46 L64 82 L82 46" fill="none" stroke="url(#ac2)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="64" cy="90" r="3" fill="#6c63ff"/>
+      </svg>
+    </div>
+    <div class="text-area">
+      <h1>VEIL</h1>
+      <p>End-to-end encryption for <em>any</em> web messenger. Messages are encrypted before they leave your browser.</p>
+      <div class="features">
+        <div class="feat"><span class="check">&#x2713;</span> AES-256-GCM</div>
+        <div class="feat"><span class="check">&#x2713;</span> No accounts</div>
+        <div class="feat"><span class="check">&#x2713;</span> Keys in RAM only</div>
+        <div class="feat"><span class="check">&#x2713;</span> Open source</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

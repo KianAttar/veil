@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node node_modules/esbuild/bin/esbuild src/background.ts src/content.ts src/popup.ts --bundle --platform=browser --target=chrome120 --outdir=. --define:__VEIL_DEV__=true",
-    "build:prod": "node node_modules/esbuild/bin/esbuild src/background.ts src/content.ts src/popup.ts --bundle --platform=browser --target=chrome120 --outdir=. --define:__VEIL_DEV__=false",
+    "build:prod": "node node_modules/esbuild/bin/esbuild src/background.ts src/content.ts src/popup.ts --bundle --platform=browser --target=chrome120 --outdir=. --define:__VEIL_DEV__=false --drop:console",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
