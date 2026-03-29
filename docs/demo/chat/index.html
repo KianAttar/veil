@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Veil Chat Playground</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#06060c;--surface:#0d0d16;--elevated:#14141f;--border:#1e1e30;
+      --text:#d8d8e4;--dim:#6a6a80;--accent:#6c63ff;
+      --bob:#4a9eff;--john:#ff6b6b;
+    }
+    body{
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      background:var(--bg);color:var(--text);height:100vh;
+      display:flex;flex-direction:column;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* Picker view */
+    .picker{
+      flex:1;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:24px;padding:24px;
+    }
+    .picker h1{font-size:22px;font-weight:700;}
+    .picker p{color:var(--dim);font-size:14px;max-width:440px;text-align:center;line-height:1.6;}
+    .picker-btns{display:flex;gap:16px;}
+    .pick-btn{
+      padding:14px 36px;border:none;border-radius:10px;
+      font-size:16px;font-weight:700;cursor:pointer;
+      font-family:inherit;transition:all .15s;
+    }
+    .pick-bob{background:var(--bob);color:#fff;}
+    .pick-bob:hover{box-shadow:0 0 24px rgba(74,158,255,.25);}
+    .pick-john{background:var(--john);color:#fff;}
+    .pick-john:hover{box-shadow:0 0 24px rgba(255,107,107,.25);}
+    .picker .back{color:var(--dim);font-size:12px;text-decoration:none;}
+    .picker .back:hover{color:var(--accent);}
+
+    /* Chat view */
+    .chat-view{display:none;flex-direction:column;height:100vh;}
+    .chat-view.active{display:flex;}
+
+    .banner{
+      padding:10px 20px;background:rgba(108,99,255,.06);
+      border-bottom:1px solid rgba(108,99,255,.15);
+      font-size:12px;color:var(--accent);text-align:center;
+    }
+    .banner a{color:var(--accent);font-weight:600;}
+
+    .header{
+      padding:12px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px;background:var(--surface);
+    }
+    .header .title{font-size:14px;font-weight:700;letter-spacing:2px;color:var(--dim);}
+    .header .badge{
+      padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;
+    }
+    .badge.bob{background:rgba(74,158,255,.12);color:var(--bob);}
+    .badge.john{background:rgba(255,107,107,.12);color:var(--john);}
+    .header .spacer{flex:1;}
+    .header .peer-link{color:var(--dim);font-size:12px;text-decoration:none;}
+    .header .peer-link:hover{color:var(--accent);}
+
+    .messages{
+      flex:1;overflow-y:auto;padding:20px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .msg-wrap{display:flex;flex-direction:column;max-width:75%;}
+    .msg-wrap.mine{align-self:flex-end;}
+    .msg-wrap.theirs{align-self:flex-start;}
+    .msg{padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.5;}
+    .msg-wrap.mine .msg{border-bottom-right-radius:4px;}
+    .msg-wrap.theirs .msg{border-bottom-left-radius:4px;}
+    .msg-wrap.mine.is-bob .msg{background:var(--bob);color:#fff;}
+    .msg-wrap.mine.is-john .msg{background:var(--john);color:#fff;}
+    .msg-wrap.theirs .msg{background:var(--elevated);border:1px solid var(--border);}
+    .msg-time{font-size:10px;color:var(--dim);margin-top:2px;padding:0 4px;}
+    .msg-wrap.mine .msg-time{text-align:right;}
+
+    .empty-state{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      color:var(--dim);font-size:13px;font-style:italic;
+    }
+
+    .input-area{
+      padding:12px 20px;border-top:1px solid var(--border);
+      background:var(--surface);display:flex;gap:10px;
+    }
+    .input-area input{
+      flex:1;padding:10px 14px;background:var(--elevated);
+      border:1px solid var(--border);border-radius:8px;
+      color:var(--text);font-size:14px;font-family:inherit;outline:none;
+    }
+    .input-area input:focus{border-color:var(--accent);}
+    .input-area input::placeholder{color:var(--dim);}
+    .btn-send{
+      padding:10px 18px;border:none;border-radius:8px;
+      background:var(--accent);color:#fff;font-size:13px;
+      font-weight:600;cursor:pointer;font-family:inherit;
+    }
+    .btn-send:hover{background:#7b73ff;}
+
+    .actions{
+      padding:6px 20px;border-top:1px solid var(--border);
+      background:var(--surface);display:flex;justify-content:flex-end;
+    }
+    .btn-clear{
+      background:transparent;color:var(--dim);border:1px solid var(--border);
+      font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;
+      font-family:inherit;
+    }
+    .btn-clear:hover{border-color:var(--john);color:var(--john);}
+
+    .hidden{display:none!important;}
+  </style>
+</head>
+<body>
+
+  <!-- User picker -->
+  <div class="picker" id="picker">
+    <h1>Chat Playground</h1>
+    <p>Open two tabs — one as Bob, one as John — and chat in real time. Messages are sent in plain text. Install the <strong>Veil extension</strong> to encrypt them.</p>
+    <div class="picker-btns">
+      <button class="pick-btn pick-bob" onclick="startAs('bob')">Open as Bob</button>
+      <button class="pick-btn pick-john" onclick="startAs('john')">Open as John</button>
+    </div>
+    <a href="../" class="back">&larr; Back to tutorial</a>
+  </div>
+
+  <!-- Chat interface -->
+  <div class="chat-view" id="chatView">
+    <div class="banner">Messages are sent unencrypted. Install <a href="/">Veil</a> to add end-to-end encryption.</div>
+    <div class="header">
+      <span class="title">CHAT</span>
+      <span class="badge" id="myBadge"></span>
+      <span class="spacer"></span>
+      <a href="#" class="peer-link" id="peerLink"></a>
+    </div>
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="msgInput" placeholder="Type a message...">
+      <button class="btn-send" id="btnSend">Send</button>
+    </div>
+    <div class="actions">
+      <button class="btn-clear" id="btnClear">Clear chat</button>
+    </div>
+  </div>
+
+<script>
+  const STORAGE = 'veil_playground_chat';
+  let ME = null;
+  let PEER = null;
+  let channel = null;
+
+  // Check URL params
+  const params = new URLSearchParams(location.search);
+  if (params.get('u') === 'bob' || params.get('u') === 'john') {
+    startAs(params.get('u'));
+  }
+
+  function startAs(user) {
+    ME = user;
+    PEER = user === 'bob' ? 'john' : 'bob';
+
+    // Update URL without reload
+    history.replaceState(null, '', '?u=' + ME);
+
+    // Show chat view
+    document.getElementById('picker').classList.add('hidden');
+    const chatView = document.getElementById('chatView');
+    chatView.classList.add('active');
+    document.title = 'Chat — ' + ME.charAt(0).toUpperCase() + ME.slice(1);
+
+    // Set badge
+    const badge = document.getElementById('myBadge');
+    badge.textContent = ME.charAt(0).toUpperCase() + ME.slice(1);
+    badge.classList.add(ME);
+
+    // Peer link
+    const peerLink = document.getElementById('peerLink');
+    peerLink.textContent = 'Open ' + PEER.charAt(0).toUpperCase() + PEER.slice(1) + ' in new tab';
+    peerLink.href = '?u=' + PEER;
+    peerLink.target = '_blank';
+
+    // BroadcastChannel
+    channel = new BroadcastChannel('veil-playground');
+    channel.onmessage = (e) => {
+      if (e.data.type === 'message' && e.data.msg.from === PEER) {
+        addMsg(e.data.msg);
+        renderMessages();
+      }
+      if (e.data.type === 'clear') renderMessages();
+    };
+
+    // Event listeners
+    document.getElementById('btnSend').addEventListener('click', send);
+    document.getElementById('msgInput').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    document.getElementById('btnClear').addEventListener('click', () => {
+      localStorage.setItem(STORAGE, '[]');
+      channel.postMessage({ type: 'clear' });
+      renderMessages();
+    });
+
+    document.getElementById('msgInput').focus();
+    renderMessages();
+  }
+
+  function loadMsgs() {
+    try { return JSON.parse(localStorage.getItem(STORAGE) || '[]'); } catch { return []; }
+  }
+  function addMsg(msg) {
+    const msgs = loadMsgs();
+    msgs.push(msg);
+    localStorage.setItem(STORAGE, JSON.stringify(msgs));
+  }
+
+  function send() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    if (!text) return;
+    const msg = { from: ME, text, ts: Date.now() };
+    addMsg(msg);
+    channel.postMessage({ type: 'message', msg });
+    input.value = '';
+    renderMessages();
+  }
+
+  function renderMessages() {
+    const el = document.getElementById('messages');
+    const msgs = loadMsgs();
+
+    if (msgs.length === 0) {
+      el.innerHTML = '<div class="empty-state">No messages yet. Send one or open the other tab.</div>';
+      return;
+    }
+
+    el.innerHTML = '';
+    for (const msg of msgs) {
+      const isMine = msg.from === ME;
+      const wrap = document.createElement('div');
+      wrap.className = 'msg-wrap ' + (isMine ? 'mine is-' + msg.from : 'theirs');
+      const bubble = document.createElement('div');
+      bubble.className = 'msg';
+      bubble.textContent = msg.text;
+      wrap.appendChild(bubble);
+
+      const time = document.createElement('div');
+      time.className = 'msg-time';
+      time.textContent = new Date(msg.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      wrap.appendChild(time);
+
+      el.appendChild(wrap);
+    }
+    el.scrollTop = el.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

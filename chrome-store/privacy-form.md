@@ -83,6 +83,7 @@ Last updated: March 28, 2026
 Veil is a browser extension that provides end-to-end encryption for web-based chat messengers. This policy explains what data Veil handles and how.
 
 **Data Veil does NOT collect:**
+
 - No personal information (name, email, phone, etc.)
 - No message content — all encryption and decryption happens locally in your browser
 - No browsing history or web activity
@@ -90,6 +91,7 @@ Veil is a browser extension that provides end-to-end encryption for web-based ch
 - No cookies or third-party tracking
 
 **Data stored locally on your device:**
+
 - Language preference (English or Persian)
 - Per-site CSS selectors for input detection (stored in chrome.storage.local)
 - Session encryption keys (stored in chrome.storage.session — RAM only, erased when the browser closes)
@@ -111,3 +113,14 @@ If this policy is updated, the changes will be posted on this page with an updat
 
 **Contact:**
 support@kiancode.dev
+
+## Additional instructions:
+
+No login required. To test:
+
+1. Install the extension and open any webpage
+2. Click the Veil icon in the toolbar
+3. Click "Set up for this site" and click an input box, then a send button
+4. Open the same page in a second tab
+5. Click "Start Session" in both tabs — they will exchange keys automatically
+6. Type a message — it will be encrypted before sending
