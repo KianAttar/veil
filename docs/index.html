@@ -66,6 +66,17 @@
       transition: color 0.15s;
     }
     .nav-links a:hover { color: var(--text); }
+    .nav-toggle {
+      display: none;
+      background: none; border: none; cursor: pointer; padding: 4px;
+    }
+    .nav-toggle span {
+      display: block; width: 20px; height: 2px; background: var(--text);
+      margin: 4px 0; border-radius: 1px; transition: all 0.2s;
+    }
+    .nav-toggle.open span:nth-child(1) { transform: rotate(45deg) translate(3px, 4px); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; }
+    .nav-toggle.open span:nth-child(3) { transform: rotate(-45deg) translate(3px, -4px); }
 
     /* --- Sections --- */
     section {
@@ -318,6 +329,53 @@
       margin-bottom: 10px;
     }
 
+    /* --- Demo --- */
+    .demo-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .demo-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px 28px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .demo-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .demo-card .dc-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .demo-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .demo-card p {
+      font-size: 14px;
+      color: var(--text-dim);
+      line-height: 1.5;
+      flex: 1;
+    }
+    .demo-card .dc-link {
+      margin-top: 16px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
     /* --- Footer --- */
     footer {
       border-top: 1px solid var(--border);
@@ -336,10 +394,26 @@
 
     /* --- Responsive --- */
     @media (max-width: 700px) {
+      .nav-toggle { display: block; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(10, 10, 15, 0.96);
+        border-bottom: 1px solid var(--border);
+        flex-direction: column;
+        padding: 16px 24px;
+        gap: 16px;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { font-size: 16px; }
       .steps,
       .security-grid,
       .privacy-points,
-      .verify-channels {
+      .verify-channels,
+      .demo-cards {
         grid-template-columns: 1fr;
       }
       .hero-secondary {
@@ -348,7 +422,6 @@
         max-width: 260px;
         text-align: center;
       }
-      .nav-links { gap: 16px; }
     }
   </style>
 </head>
@@ -357,9 +430,13 @@
   <nav>
     <div class="nav-inner">
       <a href="#" class="nav-logo">VEIL</a>
-      <div class="nav-links">
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links" id="navLinks">
         <a href="#how">How it works</a>
         <a href="#security">Security</a>
+        <a href="#demo">Demo</a>
         <a href="#privacy">Privacy</a>
         <a href="https://github.com/KianAttar/veil">GitHub</a>
       </div>
@@ -449,6 +526,25 @@
     </div>
   </section>
 
+  <section id="demo">
+    <div class="section-label">Try it</div>
+    <h2 class="section-title">See Veil in action</h2>
+    <div class="demo-cards">
+      <a href="/demo/" class="demo-card">
+        <span class="dc-label">Walkthrough</span>
+        <h3>How Veil Works</h3>
+        <p>Step through the full encryption flow: key exchange, encrypted messaging, server view, and forward secrecy. All side-by-side, no install required.</p>
+        <span class="dc-link">Start the tutorial &rarr;</span>
+      </a>
+      <a href="/demo/chat/" class="demo-card">
+        <span class="dc-label">Playground</span>
+        <h3>Live Chat</h3>
+        <p>Open two tabs and chat in real time. Messages are plain text by default. Install the Veil extension to encrypt them.</p>
+        <span class="dc-link">Open playground &rarr;</span>
+      </a>
+    </div>
+  </section>
+
   <section id="privacy">
     <div class="section-label">Privacy</div>
     <h2 class="section-title">Designed to know nothing about you</h2>
@@ -475,5 +571,19 @@
     <p>Veil is open source under the <a href="https://github.com/KianAttar/veil/blob/main/LICENSE">MIT License</a>. View on <a href="https://github.com/KianAttar/veil">GitHub</a>. <a href="/privacy.html">Privacy Policy</a>.</p>
   </footer>
 
+  <script>
+    const toggle = document.getElementById('navToggle');
+    const links = document.getElementById('navLinks');
+    toggle.addEventListener('click', () => {
+      toggle.classList.toggle('open');
+      links.classList.toggle('open');
+    });
+    links.addEventListener('click', (e) => {
+      if (e.target.tagName === 'A') {
+        toggle.classList.remove('open');
+        links.classList.remove('open');
+      }
+    });
+  </script>
 </body>
 </html>
