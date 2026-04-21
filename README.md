@@ -2,6 +2,8 @@
 
 A Chrome extension that adds end-to-end encryption to any web messenger — Telegram, WhatsApp, or anything else with a text input box. Both users need the extension installed. The plaintext never leaves your browser unencrypted.
 
+**[Install from the Chrome Web Store →](https://chromewebstore.google.com/detail/veil/njiomficjnnbjkkgnimgomojhicomgeh)**
+
 ---
 
 ## How it works
@@ -47,9 +49,13 @@ Zero external crypto libraries. Everything runs on the browser's built-in WebCry
 
 ---
 
-## Installation (development)
+## Installation
 
-Veil is not yet on the Chrome Web Store. Load it as an unpacked extension:
+**[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/veil/njiomficjnnbjkkgnimgomojhicomgeh)** — one click, no setup.
+
+### Development install
+
+To hack on Veil, load it as an unpacked extension:
 
 ```bash
 git clone <repo>
